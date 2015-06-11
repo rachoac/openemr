@@ -11,6 +11,7 @@ $fake_register_globals=false;
 $sanitize_all_escapes=true;
 
 require_once(dirname(__FILE__) . "/../globals.php");
+require_once("api/ServiceChargeAPI.php");
 
 ?>
 
