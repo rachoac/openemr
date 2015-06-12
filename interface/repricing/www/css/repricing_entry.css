@@ -11,6 +11,10 @@ body {
     height: 30px;
 }
 
+#j-claim-detail-list {
+    display: none;
+}
+
 section.j-claim {
     border: 1px solid black;
     width: 999px;

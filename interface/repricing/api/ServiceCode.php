@@ -1,6 +1,6 @@
 <?php
 
-class ServiceCharge {
+class ServiceCode {
 
     var $id;
     var $code;

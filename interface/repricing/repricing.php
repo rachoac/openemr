@@ -11,7 +11,7 @@ $fake_register_globals=false;
 $sanitize_all_escapes=true;
 
 require_once(dirname(__FILE__) . "/../globals.php");
-require_once("api/ServiceChargeAPI.php");
+require_once("api/RepricingAPI.php");
 
 ?>
 
@@ -19,13 +19,19 @@ require_once("api/ServiceChargeAPI.php");
     <head>
 <!--        <meta http-equiv="refresh" content="2">-->
 
+        <title><?php echo xlt('EOB/Repricing') ?></title>
+
         <?php if (function_exists('html_header_show')) html_header_show(); ?>
         <link rel=stylesheet href="<?php echo $css_header; ?>" type="text/css">
-        <title><?php echo xlt('EOB/Repricing') ?></title>
-        <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery.js"></script>
+        <link rel='stylesheet' href='<?php echo $GLOBALS['webroot'] ?>/library/css/jquery-ui-1.8.21.custom.css' type='text/css'/>
+
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/q.js"></script>
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-1.7.2.min.js"></script>
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-ui-1.8.21.custom.min.js"></script>
+
         <script type="text/javascript" src="www/js/view.js"></script>
         <script type="text/javascript" src="www/js/main.js"></script>
-        <link rel=stylesheet href="www/css/repricing_entry.css" type="text/css">
+        <link rel=stylesheet href="www/css/repricing_entry.css?v=2" type="text/css">
     </head>
 
     <body class="body_top">
@@ -47,27 +53,12 @@ require_once("api/ServiceChargeAPI.php");
         <section id="j-claim-detail-list" class="j-claim">
 
             <table>
-                <thead>
+                <thead class="j-claim-detail-entry-header">
                     <th>Service Date</th>
                     <th>Service Code</th>
                     <th>Service Description</th>
                     <th>Charge</th>
                 </thead>
-
-                <tr>
-                    <td>
-                        1/1/2005
-                    </td>
-                    <td>
-                        <input type="text" value="97004">
-                    </td>
-                    <td>
-                        Blah blah blah blah blah dynamic
-                    </td>
-                    <td>
-                        <input type="text" value="123.40" >
-                    </td>
-                </tr>
 
             </table>
 
@@ -76,7 +67,6 @@ require_once("api/ServiceChargeAPI.php");
         <section id="j-claim-controls" class="j-claim">
             <button id="j-btn-add-service">Add service</button>
         </section>
-
 
         <!--           -->
         <!-- templates -->
@@ -87,13 +77,13 @@ require_once("api/ServiceChargeAPI.php");
                     1/1/2005
                 </td>
                 <td>
-                    <input type="text" value="97004" class="j-service-code">
+                    <input type="text" value="" class="j-service-code">
+                </td>
+                <td class="j-claim-entry-description">
+                    --
                 </td>
                 <td>
-                    Blah blah blah blah blah dynamic
-                </td>
-                <td>
-                    <input type="text" value="123.40" class="j-service-charge">
+                    <input type="text" value="" class="j-service-charge">
                 </td>
             </tr>
         </table>

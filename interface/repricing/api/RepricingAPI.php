@@ -1,8 +1,10 @@
 <?php
 
-require_once( "ServiceCharge.php");
+require_once(dirname(__FILE__)."/../../globals.php");
+require_once("$srcdir/sql.inc");
+require_once("ServiceCode.php");
 
-class ServiceAPI {
+class RepricingAPI {
 
     const SQL_SELECT =
         "SELECT id,
@@ -33,11 +35,12 @@ class ServiceAPI {
         $codes = array();
 
         for($iter=0; $row=sqlFetchArray($stmt); $iter++) {
-            $code = new ServiceCharge();
-            $code->code = $row['code'];
-            $code->text = $row['code_text'];
-            $code->id = $row['id'];
-            $code->codeType = $row['code_type'];
+            $code = new ServiceCode(
+                $row['id'],
+                $row['code'],
+                $row['code_text'],
+                $row['code_type']
+            );
             array_push( $codes, $code );
         }
 
