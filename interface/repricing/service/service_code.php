@@ -15,7 +15,6 @@ foreach( $codes as $result ) {
     array_push( $results, $json_row );
 }
 
-
 header('Content-type: application/json');
 echo json_encode( $results );
 

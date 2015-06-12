@@ -32,10 +32,10 @@ class RepricingAPI {
 
     const SQL_PROVIDERS_WHERE_SEARCH =
         "WHERE npi IS NOT NULL
-           AND (fname LIKE ?
-               OR mname LIKE ?
-               OR lname LIKE ?
-               OR npi LIKE ?)";
+           AND (   (fname LIKE ? OR mname LIKE ? OR lname LIKE ? OR npi LIKE ?)
+                OR (CONCAT(fname, ' ', lname ) LIKE ?)
+                OR (CONCAT(fname, ' ', mname, ' ', lname ) LIKE ?)
+               )";
 
     const SQL_PROVIDERS_WHERE_GET_BY_ID =
         "WHERE id = ?";
@@ -75,7 +75,7 @@ class RepricingAPI {
      */
     function searchProviders( $searchTerm ) {
         $stmt = sqlStatement( self::SQL_PROVIDERS_SELECT . " " . self::SQL_PROVIDERS_WHERE_SEARCH . " LIMIT 50",
-            array( "%$searchTerm%", "%$searchTerm%", "%$searchTerm%", "%$searchTerm%" ) );
+            array( "%$searchTerm%", "%$searchTerm%", "%$searchTerm%", "%$searchTerm%", "%$searchTerm%", "%$searchTerm%" ) );
 
         $providers = array();
 

@@ -71,6 +71,13 @@ RepricingView.prototype.wireEventListeners = function() {
             select: function( event, ui ) {
                 $(this).attr('data-provider-id', ui.item.id );
             }
+        }).change( function() {
+            $(this).attr('data-provider-id', '' );
+        }).focusout( function() {
+            if (!$(this).attr('data-provider-id')) {
+                $(this).val("");
+                $("#j-btn-add-provider").click();
+            }
         });
 
         $("#j-btn-save-provider").click( function() {
