@@ -1,6 +1,2 @@
-$(document).ready( function() {
-
-    var repricingView = new RepricingView();
-    repricingView.wireEventListeners();
-
-});
+var repricingView = new RepricingView($PID);
+repricingView.wireEventListeners();

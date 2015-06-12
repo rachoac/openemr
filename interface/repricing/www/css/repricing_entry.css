@@ -28,11 +28,42 @@ section.j-claim {
     width: 80px;
 }
 
+.j-modal .j-label {
+    width: 40%;
+}
+.j-modal .j-field {
+    width: 60%;
+}
+.j-modal .j-field input {
+    width: 150px;
+}
+
 .j-field {
     alignment: left;
     width: 250px;
 }
 
 #j-provider {
-    width: 100%;
+    width: 80%;
+}
+
+#j-btn-add-provider {
+    vertical-align: middle;
+    margin-left: 2px;
+}
+
+.j-modal {
+    padding: 15px;
+}
+
+.j-modal .j-label {
+    text-align: right;
+    padding-right: 8px;
+}
+
+.j-modal-nav {
+    margin-top: 10px;
+}
+.j-modal h2 {
+    margin-top: -5px;
 }

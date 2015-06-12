@@ -24,18 +24,24 @@ require_once("api/RepricingAPI.php");
         <?php if (function_exists('html_header_show')) html_header_show(); ?>
         <link rel=stylesheet href="<?php echo $css_header; ?>" type="text/css">
         <link rel='stylesheet' href='<?php echo $GLOBALS['webroot'] ?>/library/css/jquery-ui-1.8.21.custom.css' type='text/css'/>
+        <link rel="stylesheet" type="text/css" href="<?php echo $GLOBALS['webroot'] ?>/library/js/fancybox-1.3.4/jquery.fancybox-1.3.4.css" media="screen" />
+        <link rel=stylesheet href="www/css/repricing_entry.css?v=2" type="text/css">
 
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/q.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-1.7.2.min.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-ui-1.8.21.custom.min.js"></script>
-
-        <script type="text/javascript" src="www/js/view.js"></script>
-        <script type="text/javascript" src="www/js/main.js"></script>
-        <link rel=stylesheet href="www/css/repricing_entry.css?v=2" type="text/css">
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/fancybox-1.3.4/jquery.fancybox-1.3.4.pack.js"></script>
+        <script type="text/javascript" src="www/js/view.js?v=4"></script>
+        <script>
+            var repricingView = new RepricingView(<?php echo $_SESSION['pid']?>);
+        </script>
     </head>
 
     <body class="body_top">
 
+        <!--           -->
+        <!-- summary   -->
+        <!--           -->
         <section id="j-claim-summary" class="j-claim">
             <table>
                 <tr>
@@ -44,14 +50,18 @@ require_once("api/RepricingAPI.php");
 
                     <td class="j-label">Provider:</td>
                     <td class="j-field">
-                        <input id="j-provider" type="text" value="Darth Maul">
+                        <input id="j-provider" type="text" value="" data-provider-id="">
+                        <a href="#modal-add-provider" id="j-btn-add-provider" ><img src="<?php echo $GLOBALS['webroot'] ?>/images/add.png"></a>
                     </td>
                 </tr>
             </table>
         </section>
 
-        <section id="j-claim-detail-list" class="j-claim">
 
+        <!--                -->
+        <!-- transactions   -->
+        <!--                -->
+        <section id="j-claim-detail-list" class="j-claim">
             <table>
                 <thead class="j-claim-detail-entry-header">
                     <th>Service Date</th>
@@ -61,7 +71,6 @@ require_once("api/RepricingAPI.php");
                 </thead>
 
             </table>
-
         </section>
 
         <section id="j-claim-controls" class="j-claim">
@@ -69,12 +78,59 @@ require_once("api/RepricingAPI.php");
         </section>
 
         <!--           -->
-        <!-- templates -->
+        <!-- modals    -->
+        <!-- (hidden)  -->
+        <div style="display: none">
+            <div id="modal-add-provider" class="j-modal">
+                <h2>Create provider</h2>
+                <table>
+                    <tr>
+                        <td>
+                            First name
+                        </td>
+                        <td class="j-field">
+                            <input type="text" id="j-provider-fname">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Middle name
+                        </td>
+                        <td class="j-field">
+                            <input type="text" id="j-provider-mname">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Last name
+                        </td>
+                        <td class="j-field">
+                            <input type="text" id="j-provider-lname"
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            NPI
+                        </td>
+                        <td class="j-field">
+                            <input type="text" id="j-provider-npi">
+                        </td>
+                    </tr>
+                </table>
+
+                <section class="j-modal-nav">
+                    <button id="j-btn-save-provider">Save</button>
+                </section>
+            </div>
+        </div>
+
         <!--           -->
+        <!-- templates -->
+        <!-- (hidden)  -->
         <table class="j-template j-claim-detail-entry">
             <tr>
                 <td>
-                    1/1/2005
+                    <input type="text" value="1/2/2015" class="j-claim-detail-date">
                 </td>
                 <td>
                     <input type="text" value="" class="j-service-code">

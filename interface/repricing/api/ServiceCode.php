@@ -13,10 +13,6 @@ class ServiceCode {
         $this->text = $text;
         $this->codeType = $codeType;
     }
-
-    function display() {
-        return $this->codeType . ":" . $this->id . " - " . $this->code . " " . $this->text;
-    }
 }
 
 ?>
