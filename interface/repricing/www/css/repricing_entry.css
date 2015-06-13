@@ -24,8 +24,16 @@ section.j-claim {
 }
 
 .j-label {
+    font-size: small;
     font-weight: bold;
-    width: 80px;
+    width: 100px;
+    text-align: right;
+    padding-right: 8px;
+}
+
+.j-field {
+    alignment: left;
+    width: 200px;
 }
 
 .j-modal .j-label {
@@ -36,11 +44,6 @@ section.j-claim {
 }
 .j-modal .j-field input {
     width: 150px;
-}
-
-.j-field {
-    alignment: left;
-    width: 250px;
 }
 
 #j-provider {
@@ -66,4 +69,12 @@ section.j-claim {
 }
 .j-modal h2 {
     margin-top: -5px;
+}
+
+.j-claim-summary input {
+    width: 100px;
+}
+
+.j-date-field {
+    width: 70px;
 }

@@ -23,7 +23,7 @@ require_once("api/RepricingAPI.php");
         <link rel=stylesheet href="<?php echo $css_header; ?>" type="text/css">
         <link rel='stylesheet' href='<?php echo $GLOBALS['webroot'] ?>/library/css/jquery-ui-1.8.21.custom.css' type='text/css'/>
         <link rel="stylesheet" type="text/css" href="<?php echo $GLOBALS['webroot'] ?>/library/js/fancybox-1.3.4/jquery.fancybox-1.3.4.css" media="screen" />
-        <link rel=stylesheet href="www/css/repricing_entry.css?v=2" type="text/css">
+        <link rel=stylesheet href="www/css/repricing_entry.css?v=<?php echo rand();?>" type="text/css">
         <link rel='stylesheet' href='<?php echo $GLOBALS['webroot'] ?>/library/dynarch_calendar.css' type='text/css'/>
 
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot']; ?>/library/dynarch_calendar.js"></script>
@@ -63,7 +63,7 @@ require_once("api/RepricingAPI.php");
                 <tr>
                     <td class="j-label">Claim date:</td>
                     <td>
-                        <input type='text' size='10' name='j-claim-date' id='j-claim-date'
+                        <input type='text' name='j-claim-date' id='j-claim-date' class="j-date-field"
                                onkeyup='datekeyup(this,mypcc)' onblur='dateblur(this,mypcc)'
                                title='yyyy-mm-dd' />
                         <img src='<?php echo $GLOBALS['webroot']; ?>/interface/pic/show_calendar.gif' align='absbottom' width='24' height='22'
@@ -73,7 +73,7 @@ require_once("api/RepricingAPI.php");
 
                     <td class="j-label">Received date:</td>
                     <td>
-                        <input type='text' size='10' name='j-received-date' id='j-received-date'
+                        <input type='text' name='j-received-date' id='j-received-date' class="j-date-field"
                                onkeyup='datekeyup(this,mypcc)' onblur='dateblur(this,mypcc)'
                                title='yyyy-mm-dd' />
                         <img src='<?php echo $GLOBALS['webroot']; ?>/interface/pic/show_calendar.gif' align='absbottom' width='24' height='22'
@@ -81,6 +81,19 @@ require_once("api/RepricingAPI.php");
                              title='Click here to choose a date' >
                     </td>
                 </tr>
+
+                <tr>
+                    <td class="j-label">Total billed:</td>
+                    <td class="j-field">
+                        <input id="j-total-billed" type="text">
+                    </td>
+
+                    <td class="j-label">Balance/<br>Net pay:</td>
+                    <td class="j-field">
+                        <input id="j-remaining-balance-net-pay" type="text">
+                    </td>
+                </tr>
+
             </table>
         </section>
 
@@ -161,8 +174,8 @@ require_once("api/RepricingAPI.php");
                     <img src="<?php echo $GLOBALS['webroot'] ?>/images/deleteBtn.png" class="j-claim-entry-delete-btn">
                 </td>
                 <td>
-                    <input type='text' size='10'
-                           class="j-claim-detail-date"
+                    <input type='text'
+                           class="j-claim-detail-date j-date-field"
                            name=''
                            id=''
                            title='yyyy-mm-dd' />

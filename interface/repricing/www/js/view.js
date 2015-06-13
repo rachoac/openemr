@@ -125,7 +125,7 @@ RepricingView.prototype.wireEventListeners = function() {
         }).change( function() {
             $(this).attr('data-provider-id', '' );
         }).focusout( function() {
-            if (!$(this).attr('data-provider-id')) {
+            if (!$(this).attr('data-provider-id') && $("#j-provider").val().trim() ) {
                 $(this).val("");
                 $("#j-btn-add-provider").click();
             }
