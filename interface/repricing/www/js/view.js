@@ -1,8 +1,8 @@
-function RepricingView(patientID){
-    debugger;
+function RepricingView(patientID, mypcc){
     this.patientID = patientID;
     this.populateUser();
     this.wireEventListeners();
+    this.mypcc = mypcc;
 }
 
 RepricingView.prototype.populateUser = function() {
@@ -20,20 +20,48 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
         newRow.find('.j-claim-entry-description').html(claimEntryDescription);
     }
 
+    //
     // attach to DOM
+    //
     $("#j-claim-detail-list table").append(newRow);
-    newRow.find(".j-service-code").focus();
 
-    newRow.find(".j-service-code").autocomplete({
-        source: 'service/service_code.php',
-        minLength: 2,
-        select: function( event, ui ) {
-            $(this).parent().parent().find('td.j-claim-entry-description').html( ui.item.label );
+    //
+    // setup calendar
+    //
+    var rowID = guid();
+    newRow.find('.j-claim-detail-date')
+        .focus()
+        .attr('id', rowID )
+        .attr('name', rowID )
+        .keyup( function() {
+            datekeyup(this,mypcc);
+        })
+        .blur( function() {
+            dateblur(this,mypcc);
+        });
 
-            // focus on the charge column once selected
-            newRow.find(".j-service-charge").focus();
-        }
-    });
+    newRow.find('.j-claim-detail-date-btn')
+        .attr('id', rowID + '-btn' )
+        .attr('name', rowID + '-btn');
+
+    Calendar.setup({inputField:rowID, ifFormat:"%Y-%m-%d", button:rowID + '-btn'});
+
+    //
+    // setup service code
+    //
+    newRow.find(".j-service-code")
+        .autocomplete({
+            source: 'service/service_code.php',
+            minLength: 2,
+            select: function( event, ui ) {
+                $(this).parent().parent().find('td.j-claim-entry-description').html( ui.item.label );
+
+                // focus on the charge column once selected
+                newRow.find(".j-service-charge").focus();
+            }
+        });
+
+
 };
 
 RepricingView.prototype.saveProvider = function( firstName, middleName, lastName, npi ) {
@@ -73,7 +101,12 @@ RepricingView.prototype.wireEventListeners = function() {
             self.buildClaimDetailEntry();
         });
 
-        $("#j-provider").autocomplete({
+        //
+        // setup provider
+        //
+        $("#j-provider")
+            .focus()
+            .autocomplete({
             source: 'service/providers.php',
             minLength: 2,
             select: function( event, ui ) {
@@ -107,8 +140,21 @@ RepricingView.prototype.wireEventListeners = function() {
             }
         });
 
-        // setup date fields
+        //
+        // setup claim date and service date
+        //
         Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn"});
         Calendar.setup({inputField:"j-received-date", ifFormat:"%Y-%m-%d", button:"j-received-date-btn"});
     });
 };
+
+// private
+function guid() {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
+}

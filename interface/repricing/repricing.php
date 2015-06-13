@@ -39,7 +39,8 @@ require_once("api/RepricingAPI.php");
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/fancybox-1.3.4/jquery.fancybox-1.3.4.pack.js"></script>
         <script type="text/javascript" src="www/js/view.js?v=<?php echo rand();?>"></script>
         <script>
-            var repricingView = new RepricingView(<?php echo $_SESSION['pid']?>);
+            var mypcc = '<?php echo $GLOBALS['phone_country_code'] ?>';
+            var repricingView = new RepricingView(<?php echo $_SESSION['pid']?>, mypcc);
         </script>
     </head>
 
@@ -163,8 +164,13 @@ require_once("api/RepricingAPI.php");
                            name=''
                            id=''
                            title='yyyy-mm-dd' />
-                    <img src='<?php echo $GLOBALS['webroot']; ?>/interface/pic/show_calendar.gif' align='absbottom' width='24' height='22'
-                         id='' border='0' alt='[?]' style='cursor:pointer'
+                    <img src='<?php echo $GLOBALS['webroot']; ?>/interface/pic/show_calendar.gif'
+                         align='absbottom'
+                         width='24'
+                         height='22'
+                         id=''
+                         border='0' alt='[?]' style='cursor:pointer'
+                         class="j-claim-detail-date-btn"
                          title='Click here to choose a date' >
                 </td>
                 <td>
