@@ -102,7 +102,7 @@ require_once("api/RepricingAPI.php");
         <!-- transactions   -->
         <!--                -->
         <section id="j-claim-detail-list" class="j-claim">
-            <table>
+            <table cellspacing="3px" cellpadding="3px">
                 <thead class="j-claim-detail-entry-header">
                     <th>&nbsp;</th>
                     <th>Service Date</th>

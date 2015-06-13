@@ -31,6 +31,12 @@ section.j-claim {
     padding-right: 8px;
 }
 
+thead.j-claim-detail-entry-header th {
+    font-size: small;
+    font-weight: bold;
+    text-align: left;
+}
+
 .j-field {
     alignment: left;
     width: 200px;
@@ -77,4 +83,9 @@ section.j-claim {
 
 .j-date-field {
     width: 70px;
+}
+
+.j-claim-entry-description {
+    min-width: 300px;
+    max-width: 300px;
 }
