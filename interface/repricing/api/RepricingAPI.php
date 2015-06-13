@@ -22,13 +22,20 @@ class RepricingAPI {
                 OR code LIKE ?
                 OR code_types.ct_key LIKE ?)";
 
-    const SQL_PROVIDERS_SELECT =
+    const SQL_USERS_SELECT =
         "SELECT id,
                 fname,
                 mname,
                 lname,
                 npi
            FROM users";
+
+    const SQL_PATIENTS_SELECT =
+        "SELECT id,
+                fname,
+                mname,
+                lname
+           FROM patient_data";
 
     const SQL_PROVIDERS_WHERE_SEARCH =
         "WHERE npi IS NOT NULL
@@ -37,8 +44,11 @@ class RepricingAPI {
                 OR (CONCAT(fname, ' ', mname, ' ', lname ) LIKE ?)
                )";
 
-    const SQL_PROVIDERS_WHERE_GET_BY_ID =
+    const SQL_USERS_WHERE_GET_BY_ID =
         "WHERE id = ?";
+
+    const SQL_PATIENTS_WHERE_GET_BY_ID =
+        "WHERE pid = ?";
 
     const SQL_INSERT_PROVIDER =
         "INSERT INTO users (fname, mname, lname, npi) VALUES (?, ?, ?, ?)";
@@ -74,13 +84,13 @@ class RepricingAPI {
      * @param string $searchTerm
      */
     function searchProviders( $searchTerm ) {
-        $stmt = sqlStatement( self::SQL_PROVIDERS_SELECT . " " . self::SQL_PROVIDERS_WHERE_SEARCH . " LIMIT 50",
+        $stmt = sqlStatement( self::SQL_USERS_SELECT . " " . self::SQL_PROVIDERS_WHERE_SEARCH . " LIMIT 50",
             array( "%$searchTerm%", "%$searchTerm%", "%$searchTerm%", "%$searchTerm%", "%$searchTerm%", "%$searchTerm%" ) );
 
         $providers = array();
 
         for($iter=0; $row=sqlFetchArray($stmt); $iter++) {
-            $provider = $this->providerFromRow($row);
+            $provider = $this->userFromRow($row);
             array_push( $providers, $provider );
         }
 
@@ -90,26 +100,31 @@ class RepricingAPI {
     public function createProvider($fname, $mname, $lname, $npi) {
         $providerID = sqlInsert(self::SQL_INSERT_PROVIDER, array( $fname, $mname, $lname, $npi ) );
 
-        $provider = sqlQuery(self::SQL_PROVIDERS_SELECT . " " . self::SQL_PROVIDERS_WHERE_GET_BY_ID, array ( $providerID ) );
-        return $this->providerFromRow($provider);
+        $provider = sqlQuery(self::SQL_USERS_SELECT . " " . self::SQL_USERS_WHERE_GET_BY_ID, array ( $providerID ) );
+        return $this->userFromRow($provider);
+    }
+
+    public function getPatient($patientID) {
+        $user = sqlQuery(self::SQL_PATIENTS_SELECT . " " . self::SQL_PATIENTS_WHERE_GET_BY_ID, array ( $patientID ) );
+        return $this->userFromRow($user);
     }
 
     /**
      * @param $row
      * @return Provider
      */
-    public function providerFromRow($row)
+    public function userFromRow($row)
     {
         $name = $row['fname'];
         if ($row['mname']) {
             $name .= ' ' . $row['mname'];
         }
         $name .= ' ' . $row['lname'];
-        $provider = new Provider(
+        $user = new Provider(
             $row['id'],
             $name
         );
-        return $provider;
+        return $user;
     }
 }
 ?>

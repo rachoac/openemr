@@ -1,7 +1,15 @@
 function RepricingView(patientID){
+    debugger;
     this.patientID = patientID;
+    this.populateUser();
     this.wireEventListeners();
 }
+
+RepricingView.prototype.populateUser = function() {
+    $.get('service/patients.php?patientID=' + this.patientID + '&ts=' + new Date().getTime(), null, function(data) {
+        $("#j-patient-name").html(data.name).attr('data-patient-ID', data.id);
+    });
+};
 
 RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntryDescription) {
     var newRow = $(".j-claim-detail-entry tr").clone();
@@ -98,5 +106,9 @@ RepricingView.prototype.wireEventListeners = function() {
                 $("#modal-add-provider .j-field input").val("");
             }
         });
+
+        // setup date fields
+        Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn"});
+        Calendar.setup({inputField:"j-received-date", ifFormat:"%Y-%m-%d", button:"j-received-date-btn"});
     });
 };

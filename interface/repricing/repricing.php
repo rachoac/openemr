@@ -26,12 +26,18 @@ require_once("api/RepricingAPI.php");
         <link rel='stylesheet' href='<?php echo $GLOBALS['webroot'] ?>/library/css/jquery-ui-1.8.21.custom.css' type='text/css'/>
         <link rel="stylesheet" type="text/css" href="<?php echo $GLOBALS['webroot'] ?>/library/js/fancybox-1.3.4/jquery.fancybox-1.3.4.css" media="screen" />
         <link rel=stylesheet href="www/css/repricing_entry.css?v=2" type="text/css">
+        <link rel='stylesheet' href='<?php echo $GLOBALS['webroot'] ?>/library/dynarch_calendar.css' type='text/css'/>
+
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot']; ?>/library/dynarch_calendar.js"></script>
+        <?php require_once($GLOBALS['srcdir'].'/dynarch_calendar_en.inc.php'); ?>
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot']; ?>/library/dynarch_calendar_setup.js"></script>
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot']; ?>/library/textformat.js"></script>
 
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/q.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-1.7.2.min.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-ui-1.8.21.custom.min.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/fancybox-1.3.4/jquery.fancybox-1.3.4.pack.js"></script>
-        <script type="text/javascript" src="www/js/view.js?v=4"></script>
+        <script type="text/javascript" src="www/js/view.js?v=<?php echo rand();?>"></script>
         <script>
             var repricingView = new RepricingView(<?php echo $_SESSION['pid']?>);
         </script>
@@ -46,12 +52,34 @@ require_once("api/RepricingAPI.php");
             <table>
                 <tr>
                     <td class="j-label">Patient:</td>
-                    <td class="j-field">Aron Racho</td>
+                    <td class="j-field" id="j-patient-name">--</td>
 
                     <td class="j-label">Provider:</td>
                     <td class="j-field">
                         <input id="j-provider" type="text" value="" data-provider-id="">
                         <a href="#modal-add-provider" id="j-btn-add-provider" ><img src="<?php echo $GLOBALS['webroot'] ?>/images/add.png"></a>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="j-label">Claim date:</td>
+                    <td>
+                        <input type='text' size='10' name='j-claim-date' id='j-claim-date'
+                               onkeyup='datekeyup(this,mypcc)' onblur='dateblur(this,mypcc)'
+                               title='yyyy-mm-dd' />
+                        <img src='<?php echo $GLOBALS['webroot']; ?>/interface/pic/show_calendar.gif' align='absbottom' width='24' height='22'
+                             id='j-claim-date-btn' border='0' alt='[?]' style='cursor:pointer'
+                             title='Click here to choose a date' >
+                    </td>
+
+                    <td class="j-label">Received date:</td>
+                    <td>
+                        <input type='text' size='10' name='j-received-date' id='j-received-date'
+                               onkeyup='datekeyup(this,mypcc)' onblur='dateblur(this,mypcc)'
+                               title='yyyy-mm-dd' />
+                        <img src='<?php echo $GLOBALS['webroot']; ?>/interface/pic/show_calendar.gif' align='absbottom' width='24' height='22'
+                             id='j-received-date-btn' border='0' alt='[?]' style='cursor:pointer'
+                             title='Click here to choose a date' >
                     </td>
                 </tr>
             </table>
@@ -130,7 +158,14 @@ require_once("api/RepricingAPI.php");
         <table class="j-template j-claim-detail-entry">
             <tr>
                 <td>
-                    <input type="text" value="1/2/2015" class="j-claim-detail-date">
+                    <input type='text' size='10'
+                           class="j-claim-detail-date"
+                           name=''
+                           id=''
+                           title='yyyy-mm-dd' />
+                    <img src='<?php echo $GLOBALS['webroot']; ?>/interface/pic/show_calendar.gif' align='absbottom' width='24' height='22'
+                         id='' border='0' alt='[?]' style='cursor:pointer'
+                         title='Click here to choose a date' >
                 </td>
                 <td>
                     <input type="text" value="" class="j-service-code">
