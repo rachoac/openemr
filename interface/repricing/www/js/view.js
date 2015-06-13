@@ -61,6 +61,16 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
             }
         });
 
+    //
+    // setup delete
+    //
+    newRow.find('.j-claim-entry-delete-btn')
+        .click( function() {
+            newRow.remove();
+            if ( $('.j-claim-detail-entry-row:visible').length < 1 ) {
+                $("#j-claim-detail-list").hide();
+            }
+        });
 
 };
 

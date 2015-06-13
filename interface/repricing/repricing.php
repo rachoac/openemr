@@ -17,8 +17,6 @@ require_once("api/RepricingAPI.php");
 
 <html>
     <head>
-<!--        <meta http-equiv="refresh" content="2">-->
-
         <title><?php echo xlt('EOB/Repricing') ?></title>
 
         <?php if (function_exists('html_header_show')) html_header_show(); ?>
@@ -93,6 +91,7 @@ require_once("api/RepricingAPI.php");
         <section id="j-claim-detail-list" class="j-claim">
             <table>
                 <thead class="j-claim-detail-entry-header">
+                    <th>&nbsp;</th>
                     <th>Service Date</th>
                     <th>Service Code</th>
                     <th>Service Description</th>
@@ -157,7 +156,10 @@ require_once("api/RepricingAPI.php");
         <!-- templates -->
         <!-- (hidden)  -->
         <table class="j-template j-claim-detail-entry">
-            <tr>
+            <tr class="j-claim-detail-entry-row">
+                <td>
+                    <img src="<?php echo $GLOBALS['webroot'] ?>/images/deleteBtn.png" class="j-claim-entry-delete-btn">
+                </td>
                 <td>
                     <input type='text' size='10'
                            class="j-claim-detail-date"
