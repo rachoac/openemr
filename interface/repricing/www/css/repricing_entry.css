@@ -89,3 +89,7 @@ thead.j-claim-detail-entry-header th {
     min-width: 300px;
     max-width: 300px;
 }
+
+.j-charge-field {
+    width: 80px;
+}

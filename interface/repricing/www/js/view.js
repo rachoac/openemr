@@ -11,7 +11,20 @@ RepricingView.prototype.populateUser = function() {
     });
 };
 
+RepricingView.prototype.recalculateBalances = function() {
+    var totalBilled = parseFloat( $("#j-total-billed").val() || "0.0" ) ;
+
+    var chargeEffect = 0;
+    $.each( $('.j-claim-detail-entry-row .j-service-charge:visible'), function(i, transaction) {
+        var thisCharge = parseFloat( $(transaction).val() || "0.0" );
+        chargeEffect -= thisCharge;
+    });
+
+    $("#j-remaining-balance-net-pay").val(totalBilled + chargeEffect);
+};
+
 RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntryDescription) {
+    var self = this;
     var newRow = $(".j-claim-detail-entry tr").clone();
     if ( serviceCode ) {
         newRow.find('.j-service-code').val(serviceCode);
@@ -58,6 +71,7 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
 
                 // focus on the charge column once selected
                 newRow.find(".j-service-charge").focus();
+                newRow.find('.j-service-allowed').val(ui.item.allowedCharge);
             }
         });
 
@@ -70,6 +84,13 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
             if ( $('.j-claim-detail-entry-row:visible').length < 1 ) {
                 $("#j-claim-detail-list").hide();
             }
+            self.recalculateBalances();
+        });
+
+
+    newRow.find('.j-service-charge')
+        .change( function() {
+            self.recalculateBalances();
         });
 
 };
@@ -155,6 +176,13 @@ RepricingView.prototype.wireEventListeners = function() {
         //
         Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn"});
         Calendar.setup({inputField:"j-received-date", ifFormat:"%Y-%m-%d", button:"j-received-date-btn"});
+
+        //
+        // setup total billed
+        //
+        $("#j-total-billed").change( function() {
+            self.recalculateBalances();
+        });
     });
 };
 

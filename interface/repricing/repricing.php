@@ -109,13 +109,18 @@ require_once("api/RepricingAPI.php");
                     <th>Service Code</th>
                     <th>Service Description</th>
                     <th>Charge</th>
+                    <th>Allowed</th>
+                    <th>Indemity</th>
+                    <th>Emp</th>
                 </thead>
 
             </table>
         </section>
 
-        <section id="j-claim-controls" class="j-claim">
+        <section id="j-claim-controls" >
             <button id="j-btn-add-service">Add service</button>
+            <button id="j-btn-add-service">Save</button>
+            <button id="j-btn-add-service">Cancel</button>
         </section>
 
         <!--           -->
@@ -195,7 +200,16 @@ require_once("api/RepricingAPI.php");
                     --
                 </td>
                 <td>
-                    <input type="text" value="" class="j-service-charge">
+                    <input type="text" value="" class="j-service-charge j-charge-field">
+                </td>
+                <td>
+                    <input type="text" value="" class="j-service-allowed j-charge-field">
+                </td>
+                <td>
+                    <input type="text" value="" class="j-service-indemnity j-charge-field">
+                </td>
+                <td>
+                    <input type="text" value="" class="j-service-employee j-charge-field">
                 </td>
             </tr>
         </table>

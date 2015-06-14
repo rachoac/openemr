@@ -12,6 +12,7 @@ foreach( $codes as $result ) {
     $json_row['id'] = $result->id;
     $json_row['value'] = $result->code;
     $json_row['label'] = $result->codeType . ' ' . $result->code . ': ' . $result->text;
+    $json_row['allowedCharge'] = $result->allowedCharge;
     array_push( $results, $json_row );
 }
 
