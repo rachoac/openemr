@@ -15,7 +15,7 @@ class RepricingAPI {
             pr_price as allowedCharge
        FROM codes
        JOIN code_types on codes.code_type = code_types.ct_id
-       JOIN prices on prices.pr_id = codes.id";
+       LEFT OUTER JOIN prices on prices.pr_id = codes.id";
 
     const SQL_SERVICE_CODES_WHERE_SEARCH =
         "WHERE (code_types.ct_fee = 1)
@@ -75,7 +75,7 @@ class RepricingAPI {
                 $row['code'],
                 $row['code_text'],
                 $row['code_type'],
-                $row['allowedCharge']
+                $row['allowedCharge'] ? $row['allowedCharge'] : 0.00
             );
             array_push( $codes, $code );
         }

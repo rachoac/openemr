@@ -15,9 +15,10 @@ RepricingView.prototype.recalculateBalances = function() {
     var totalBilled = parseFloat( $("#j-total-billed").val() || "0.0" ) ;
 
     var chargeEffect = 0;
-    $.each( $('.j-claim-detail-entry-row .j-service-charge:visible'), function(i, transaction) {
-        var thisCharge = parseFloat( $(transaction).val() || "0.0" );
-        chargeEffect -= thisCharge;
+    $.each( $('.j-claim-detail-entry-row:visible'), function(i, transaction) {
+        var thisCharge = parseFloat( $(transaction).find('.j-service-charge').val() || "0.0" );
+        var thisAllowedAmount = parseFloat( $(transaction).find('.j-service-allowed').val() || "0.0" );
+        chargeEffect -= (thisCharge - thisAllowedAmount);
     });
 
     $("#j-remaining-balance-net-pay").val(totalBilled + chargeEffect);
@@ -71,7 +72,7 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
 
                 // focus on the charge column once selected
                 newRow.find(".j-service-charge").focus();
-                newRow.find('.j-service-allowed').val(ui.item.allowedCharge);
+                newRow.find('.j-service-allowed').val(ui.item.allowedCharge || 0.00);
             }
         });
 
