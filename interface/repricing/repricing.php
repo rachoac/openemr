@@ -54,12 +54,9 @@ require_once("api/RepricingAPI.php");
                     <td class="j-label">Patient:</td>
                     <td class="j-field" id="j-patient-name">--</td>
 
-                    <td class="j-label">Patient:</td>
-                    <td class="j-field" id="j-patient-name">--</td>
-
                     <td class="j-label">Provider:</td>
                     <td class="j-field">
-                        <input id="j-provider" type="text" value="" data-provider-id="">
+                        <input id="j-provider" type="text" value="">
                         <a href="#modal-add-provider" id="j-btn-add-provider" ><img src="<?php echo $GLOBALS['webroot'] ?>/images/add.png"></a>
                     </td>
                 </tr>
@@ -123,8 +120,8 @@ require_once("api/RepricingAPI.php");
 
         <section id="j-claim-controls" >
             <button id="j-btn-add-service">Add service</button>
-            <button id="j-btn-add-service">Save</button>
-            <button id="j-btn-add-service">Cancel</button>
+            <button id="j-btn-add-save-claim">Save</button>
+            <button id="j-btn-add-cancel">Cancel</button>
         </section>
 
         <!--           -->
