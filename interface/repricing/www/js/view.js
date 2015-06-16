@@ -210,7 +210,7 @@ RepricingView.prototype.saveClaim = function() {
     // 1. scrape claim metadata from the UI
     var summary = {
         patientID : $("#j-patient-name").attr('data-patient-ID'),
-        provider : $("#j-provider").attr('data-provider-ID'),
+        providerID : $("#j-provider").attr('data-provider-ID'),
         claimDate: $("#j-claim-date").val(),
         receivedDate: $("#j-received-date").val(),
         totalBilled: $("#j-total-billed").val()
@@ -238,6 +238,16 @@ RepricingView.prototype.saveClaim = function() {
 
     // 2. call the backend to save it
     console.log(JSON.stringify(claim, null, 1));
+    $.ajax({
+        type: "POST",
+        contentType: "application/json; charset=utf-8",
+        url: "service/claims.php",
+        data:  JSON.stringify(claim),
+        success: function (response) {
+            // todo
+        }
+    });
+
 };
 
 // private

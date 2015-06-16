@@ -1,6 +1,7 @@
 <?php
 
 require_once(dirname(__FILE__)."/../../globals.php");
+require_once("$srcdir/billing.inc");
 require_once("$srcdir/sql.inc");
 require_once("ServiceCode.php");
 require_once("Provider.php");
@@ -25,6 +26,9 @@ class RepricingAPI {
                 OR code_text_short LIKE ?
                 OR code LIKE ?
                 OR code_types.ct_key LIKE ?)";
+
+    const SQL_SERVICE_CODE_BY_ID =
+        "WHERE id = ?";
 
     const SQL_USERS_SELECT =
         "SELECT id,
@@ -91,6 +95,24 @@ class RepricingAPI {
     }
 
     /**
+     * Returns ServiceCode by ID
+     * @param string service code ID
+     */
+    function getServiceCode( $id ) {
+        $row = sqlQuery( self::SQL_SERVICE_CODES_SELECT . " " . self::SQL_SERVICE_CODE_BY_ID, array($id) );
+
+        $code = new ServiceCode(
+            $row['id'],
+            $row['code'],
+            $row['code_text'],
+            $row['code_type'],
+            $row['allowedCharge'] ? $row['allowedCharge'] : 0.00
+        );
+
+        return $code;
+    }
+
+    /**
      * Returns an array of Provider
      * @param string $searchTerm
      */
@@ -138,8 +160,7 @@ class RepricingAPI {
      * @param $row
      * @return Provider
      */
-    public function userFromRow($row)
-    {
+    public function userFromRow($row) {
         $name = $row['fname'];
         if ($row['mname']) {
             $name .= ' ' . $row['mname'];
@@ -150,6 +171,62 @@ class RepricingAPI {
             $name
         );
         return $user;
+    }
+
+    public function saveClaim($claimData) {
+        $summary = $claimData['summary'];
+        $transactions = $claimData['transactions'];
+
+        $patientID = $summary['patientID'];
+        $providerID = $summary['$providerID'];
+        $dateOfService = $summary['claimDate'];
+        $encounterID = $summary['encounterID'];
+
+        if (!$encounterID) {
+            // create an encounter
+            $encounterID = $GLOBALS['adodb']['db']->GenID('sequences');
+            $this->createEncounter($dateOfService, $patientID, $encounterID );
+        } else {
+            $this->updateEncounter($dateOfService, $patientID, $encounterID);
+        }
+
+        foreach( $transactions as $transaction ) {
+            $serviceCode = $this->getServiceCode($transaction['serviceCodeID']);
+
+            $code_type = $serviceCode->codeType;
+            $code = $serviceCode->id;
+            $code_text = $serviceCode->text;
+            $auth = 1;
+            $modifier = "";
+            $units = 1;
+            $fee = $transaction['charge'];
+            $ndc_info = "";
+            $justify = "";
+            $notecodes = "";
+
+            addBilling($encounterID, $code_type, $code, $code_text, $patientID, $auth,
+                $providerID, $modifier, $units, $fee, $ndc_info, $justify, 0, $notecodes);
+        }
+
+        updateClaim(true, $patientID, $encounterID, -1, -1, 2);
+    }
+
+    private function createEncounter($dos, $patient_pid, $encounter_id) {
+        sqlInsert("INSERT INTO form_encounter SET " .
+            "date = '$dos', " .
+            "onset_date = '$dos', " .
+            "facility_id = '3', " .
+            "pid = '$patient_pid', " .
+            "encounter = '$encounter_id'");
+    }
+
+    private function updateEncounter($dos, $patient_pid, $encounter_id) {
+        sqlInsert("UPDATE form_encounter SET " .
+            "date = '$dos', " .
+            "onset_date = '$dos', " .
+            "facility_id = '3', " .
+            "pid = '$patient_pid', WHERE " .
+            "encounter = '$encounter_id'");
     }
 }
 ?>
