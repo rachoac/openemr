@@ -4,6 +4,7 @@ require_once(dirname(__FILE__)."/../../globals.php");
 require_once("$srcdir/sql.inc");
 require_once("ServiceCode.php");
 require_once("Provider.php");
+require_once("ClaimType.php");
 
 class RepricingAPI {
 
@@ -55,6 +56,12 @@ class RepricingAPI {
 
     const SQL_INSERT_PROVIDER =
         "INSERT INTO users (fname, mname, lname, npi) VALUES (?, ?, ?, ?)";
+
+    const SQL_CLAIM_TYPES_SELECT =
+        "SELECT option_id,
+                title
+           FROM list_options
+          WHERE list_id = 'pricelevel'";
 
     function __construct() {
     }
@@ -111,6 +118,20 @@ class RepricingAPI {
     public function getPatient($patientID) {
         $user = sqlQuery(self::SQL_PATIENTS_SELECT . " " . self::SQL_PATIENTS_WHERE_GET_BY_ID, array ( $patientID ) );
         return $this->userFromRow($user);
+    }
+
+    public function getClaimTypes() {
+        $stmt = sqlStatement(self::SQL_CLAIM_TYPES_SELECT );
+
+        $claimTypes = array();
+
+        for($iter=0; $row=sqlFetchArray($stmt); $iter++) {
+            $claimType = new ClaimType( $row['option_id'], $row['title'] );
+            array_push( $claimTypes, $claimType );
+        }
+
+        return $claimTypes;
+
     }
 
     /**

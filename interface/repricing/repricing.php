@@ -35,6 +35,7 @@ require_once("api/RepricingAPI.php");
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-1.7.2.min.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-ui-1.8.21.custom.min.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/fancybox-1.3.4/jquery.fancybox-1.3.4.pack.js"></script>
+        <script type="text/javascript" src="www/js/DateFormat.js?v=<?php echo rand();?>"></script>
         <script type="text/javascript" src="www/js/view.js?v=<?php echo rand();?>"></script>
         <script>
             var mypcc = '<?php echo $GLOBALS['phone_country_code'] ?>';
@@ -50,6 +51,9 @@ require_once("api/RepricingAPI.php");
         <section id="j-claim-summary" class="j-claim">
             <table>
                 <tr>
+                    <td class="j-label">Patient:</td>
+                    <td class="j-field" id="j-patient-name">--</td>
+
                     <td class="j-label">Patient:</td>
                     <td class="j-field" id="j-patient-name">--</td>
 

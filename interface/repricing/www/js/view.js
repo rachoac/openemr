@@ -42,8 +42,10 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
     //
     // setup calendar
     //
+    var receivedDate = $('#j-received-date').val();
     var rowID = guid();
     newRow.find('.j-claim-detail-date')
+        .val( receivedDate )
         .focus()
         .attr('id', rowID )
         .attr('name', rowID )
@@ -88,12 +90,13 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
             self.recalculateBalances();
         });
 
-
+    //
+    // setup service charge
+    //
     newRow.find('.j-service-charge')
         .change( function() {
             self.recalculateBalances();
         });
-
 };
 
 RepricingView.prototype.saveProvider = function( firstName, middleName, lastName, npi ) {
@@ -184,6 +187,12 @@ RepricingView.prototype.wireEventListeners = function() {
         $("#j-total-billed").change( function() {
             self.recalculateBalances();
         });
+
+        //
+        // setup received date
+        //
+        var today = new Date();
+        $("#j-received-date").val( today.format("yyyy-mm-dd") );
     });
 };
 
