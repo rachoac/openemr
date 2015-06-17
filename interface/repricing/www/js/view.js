@@ -139,6 +139,16 @@ RepricingView.prototype.wireEventListeners = function() {
             self.buildClaimDetailEntry();
         });
 
+
+        //
+        // setup claim type
+        //
+        $.get('service/claim_types.php', null, function(data) {
+            $.each( data, function(i, claimType) {
+                $("#j-claim-type-selection").append("<option value='" + claimType.label + "'>" +claimType.label + " </option>");
+            });
+        });
+
         //
         // setup provider
         //
@@ -207,13 +217,15 @@ RepricingView.prototype.wireEventListeners = function() {
 };
 
 RepricingView.prototype.saveClaim = function() {
+    var self = this;
     // 1. scrape claim metadata from the UI
     var summary = {
-        patientID : $("#j-patient-name").attr('data-patient-ID'),
+        patientID : self.patientID,
         providerID : $("#j-provider").attr('data-provider-ID'),
         claimDate: $("#j-claim-date").val(),
         receivedDate: $("#j-received-date").val(),
-        totalBilled: $("#j-total-billed").val()
+        totalBilled: $("#j-total-billed").val(),
+        claimType: $("#j-claim-type-selection").val()
     };
 
     var transactions = [];

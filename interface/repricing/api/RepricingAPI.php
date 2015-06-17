@@ -2,6 +2,7 @@
 
 require_once(dirname(__FILE__)."/../../globals.php");
 require_once("$srcdir/billing.inc");
+require_once("$srcdir/forms.inc");
 require_once("$srcdir/sql.inc");
 require_once("ServiceCode.php");
 require_once("Provider.php");
@@ -65,7 +66,14 @@ class RepricingAPI {
         "SELECT option_id,
                 title
            FROM list_options
-          WHERE list_id = 'pricelevel'";
+          WHERE list_id = 'pricelevel'
+            AND option_id != 'standard'";
+
+
+    const SQL_FACILITYID_GET_BY_NAME =
+        "SELECT id
+           FROM facility
+          WHERE name = ?";
 
     function __construct() {
     }
@@ -177,17 +185,23 @@ class RepricingAPI {
         $summary = $claimData['summary'];
         $transactions = $claimData['transactions'];
 
+        $claimType = $summary['claimType'];
         $patientID = $summary['patientID'];
-        $providerID = $summary['$providerID'];
+        $providerID = $summary['providerID'];
         $dateOfService = $summary['claimDate'];
         $encounterID = $summary['encounterID'];
+        $facilityID = $this->getFacilityIDByName($claimType);
+        $userauthorized = empty($_SESSION['userauthorized']) ? 0 : $_SESSION['userauthorized'];
 
         if (!$encounterID) {
             // create an encounter
             $encounterID = $GLOBALS['adodb']['db']->GenID('sequences');
-            $this->createEncounter($dateOfService, $patientID, $encounterID );
+            $formID = $this->createEncounter($dateOfService, $patientID, $encounterID, $facilityID, $providerID);
+
+            addForm($encounterID, "New Patient Encounter", $formID, "newpatient", $patientID,
+                 "1", $dateOfService, $userauthorized );
         } else {
-            $this->updateEncounter($dateOfService, $patientID, $encounterID);
+            $this->updateEncounter($dateOfService, $patientID, $encounterID, $facilityID, $providerID);
         }
 
         foreach( $transactions as $transaction ) {
@@ -211,22 +225,35 @@ class RepricingAPI {
         updateClaim(true, $patientID, $encounterID, -1, -1, 2);
     }
 
-    private function createEncounter($dos, $patient_pid, $encounter_id) {
-        sqlInsert("INSERT INTO form_encounter SET " .
+    private function createEncounter($dos, $patient_pid, $encounter_id, $facilityID, $providerID) {
+        return sqlInsert("INSERT INTO form_encounter SET " .
             "date = '$dos', " .
+            "pc_catid = 9, " .
             "onset_date = '$dos', " .
-            "facility_id = '3', " .
+            "sensitivity = 'normal', " .
+            "provider_id = $providerID, " .
+            "facility_id = $facilityID, " .
+            "billing_facility = $facilityID, " .
             "pid = '$patient_pid', " .
             "encounter = '$encounter_id'");
     }
 
-    private function updateEncounter($dos, $patient_pid, $encounter_id) {
+    private function updateEncounter($dos, $patient_pid, $encounter_id, $facilityID, $providerID) {
         sqlInsert("UPDATE form_encounter SET " .
             "date = '$dos', " .
+            "pc_catid = 9, " .
             "onset_date = '$dos', " .
-            "facility_id = '3', " .
+            "sensitivity = 'normal', " .
+            "provider_id = $providerID, " .
+            "facility_id = $facilityID, " .
+            "billing_facility = $facilityID, " .
             "pid = '$patient_pid', WHERE " .
             "encounter = '$encounter_id'");
+    }
+
+    private function getFacilityIDByName($name) {
+        $row = sqlQuery(self::SQL_FACILITYID_GET_BY_NAME, array ($name) );
+        return $row['id'];
     }
 }
 ?>

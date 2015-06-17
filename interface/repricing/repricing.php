@@ -51,6 +51,13 @@ require_once("api/RepricingAPI.php");
         <section id="j-claim-summary" class="j-claim">
             <table>
                 <tr>
+                    <td class="j-label">Claim type:</td>
+                    <td class="j-field" id="j-claim-type" colspan="2">
+                        <select id="j-claim-type-selection">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
                     <td class="j-label">Patient:</td>
                     <td class="j-field" id="j-patient-name">--</td>
 
