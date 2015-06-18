@@ -47,7 +47,7 @@ class RepricingAPI {
            FROM patient_data";
 
     const SQL_PROVIDERS_WHERE_SEARCH =
-        "WHERE npi IS NOT NULL
+        "WHERE npi IS NOT NULL AND authorized = 1
            AND (   (fname LIKE ? OR mname LIKE ? OR lname LIKE ? OR npi LIKE ?)
                 OR (CONCAT(fname, ' ', lname ) LIKE ?)
                 OR (CONCAT(fname, ' ', mname, ' ', lname ) LIKE ?)
