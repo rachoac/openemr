@@ -208,7 +208,7 @@ class RepricingAPI {
             $serviceCode = $this->getServiceCode($transaction['serviceCodeID']);
 
             $code_type = $serviceCode->codeType;
-            $code = $serviceCode->id;
+            $code = $serviceCode->code;
             $code_text = $serviceCode->text;
             $auth = 1;
             $modifier = "";
@@ -223,6 +223,12 @@ class RepricingAPI {
         }
 
         updateClaim(true, $patientID, $encounterID, -1, -1, 2);
+
+        $toReturn = array(
+            'encounterID' => $encounterID
+        );
+
+        return $toReturn;
     }
 
     private function createEncounter($dos, $patient_pid, $encounter_id, $facilityID, $providerID) {
