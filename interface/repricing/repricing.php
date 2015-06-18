@@ -31,6 +31,7 @@ require_once("api/RepricingAPI.php");
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot']; ?>/library/dynarch_calendar_setup.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot']; ?>/library/textformat.js"></script>
 
+        <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/dialog.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/q.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-1.7.2.min.js"></script>
         <script type="text/javascript" src="<?php echo $GLOBALS['webroot'] ?>/library/js/jquery-ui-1.8.21.custom.min.js"></script>
@@ -118,8 +119,8 @@ require_once("api/RepricingAPI.php");
                     <th>Service Description</th>
                     <th>Charge</th>
                     <th>Allowed</th>
-                    <th>Indemity</th>
-                    <th>Emp</th>
+                    <th>Primary</th>
+                    <th>Secondary</th>
                 </thead>
 
             </table>
@@ -130,53 +131,6 @@ require_once("api/RepricingAPI.php");
             <button id="j-btn-add-save-claim">Save</button>
             <button id="j-btn-add-cancel">Cancel</button>
         </section>
-
-        <!--           -->
-        <!-- modals    -->
-        <!-- (hidden)  -->
-        <div style="display: none">
-            <div id="modal-add-provider" class="j-modal">
-                <h2>Create provider</h2>
-                <table>
-                    <tr>
-                        <td>
-                            First name
-                        </td>
-                        <td class="j-field">
-                            <input type="text" id="j-provider-fname">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Middle name
-                        </td>
-                        <td class="j-field">
-                            <input type="text" id="j-provider-mname">
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            Last name
-                        </td>
-                        <td class="j-field">
-                            <input type="text" id="j-provider-lname"
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            NPI
-                        </td>
-                        <td class="j-field">
-                            <input type="text" id="j-provider-npi">
-                        </td>
-                    </tr>
-                </table>
-
-                <section class="j-modal-nav">
-                    <button id="j-btn-save-provider">Save</button>
-                </section>
-            </div>
-        </div>
 
         <!--           -->
         <!-- templates -->

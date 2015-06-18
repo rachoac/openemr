@@ -22,7 +22,10 @@
 
  // Collect user id if editing entry
  $userid = $_REQUEST['userid'];
- 
+
+ // if true, then user is automatically authorized
+ $isAuthorized = $_GET['isAuthorized'] == "1" || $_REQUEST['isAuthorized'] == "1";
+
  // Collect type if creating a new entry
  $type = $_REQUEST['type'];
 
@@ -172,7 +175,7 @@ td { font-size:10pt; }
     ") VALUES ( "                        .
     "'', "                               . // username
     "'', "                               . // password
-    "0, "                                . // authorized
+    ($isAuthorized ? 1 : 0) . ", "                                . // authorized
     "'', "                               . // info
     "NULL, "                             . // source
     $form_title                   . ", " .
@@ -255,6 +258,7 @@ td { font-size:10pt; }
 </script>
 
 <form method='post' name='theform' action='addrbook_edit.php?userid=<?php echo attr($userid) ?>'>
+<input type="hidden" name="isAuthorized" value="<?php echo $isAuthorized ? 1 : 0 ?>"/>
 <center>
 
 <table border='0' width='100%'>

@@ -165,28 +165,14 @@ RepricingView.prototype.wireEventListeners = function() {
         }).focusout( function() {
             if (!$(this).attr('data-provider-ID') && $("#j-provider").val().trim() ) {
                 $(this).val("");
-                $("#j-btn-add-provider").click();
             }
         });
 
-        $("#j-btn-save-provider").click( function() {
-            var firstName = $("#j-provider-fname").val();
-            var middleName = $("#j-provider-mname").val();
-            var lastName = $("#j-provider-lname").val();
-            var npi = $("#j-provider-npi").val();
-            self.saveProvider(firstName, middleName, lastName, npi).then( function() {
-                $("#fancybox-close").click();
-            });
+        $("#j-btn-add-provider").click( function() {
+            var type = "";
+            dlgopen('../usergroup/addrbook_edit.php?isAuthorized=1&type=' + type, '_blank', 700, 550);
         });
-
-        $("#j-btn-add-provider").fancybox( {
-            onComplete: function() {
-                $("#modal-add-provider").find("#j-provider-fname").focus();
-            },
-            onClosed: function() {
-                $("#modal-add-provider .j-field input").val("");
-            }
-        });
+        //});
 
         //
         // setup claim date and service date
