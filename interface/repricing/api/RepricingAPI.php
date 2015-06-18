@@ -1,12 +1,15 @@
 <?php
 
 require_once(dirname(__FILE__)."/../../globals.php");
+require_once("$srcdir/patient.inc");
 require_once("$srcdir/billing.inc");
 require_once("$srcdir/forms.inc");
 require_once("$srcdir/sql.inc");
 require_once("ServiceCode.php");
+require_once("ListOption.php");
 require_once("Provider.php");
 require_once("ClaimType.php");
+require_once("EOBStatus.php");
 
 class RepricingAPI {
 
@@ -69,11 +72,23 @@ class RepricingAPI {
           WHERE list_id = 'pricelevel'
             AND option_id != 'standard'";
 
+    const SQL_EOB_STATUS_SELECT =
+        "SELECT option_id,
+                title
+           FROM list_options
+          WHERE list_id = 'EOB_Status'";
 
     const SQL_FACILITYID_GET_BY_NAME =
         "SELECT id
            FROM facility
           WHERE name = ?";
+
+    const SQL_APPLY_EOB_STATUS =
+        "UPDATE claims
+            SET eob_status = ?
+          WHERE patient_id = ?
+            AND encounter_id = ?
+            AND version = 1";
 
     function __construct() {
     }
@@ -161,7 +176,19 @@ class RepricingAPI {
         }
 
         return $claimTypes;
+    }
 
+    public function getEOBStatuses() {
+        $stmt = sqlStatement(self::SQL_EOB_STATUS_SELECT );
+
+        $eobStatuses = array();
+
+        for($iter=0; $row=sqlFetchArray($stmt); $iter++) {
+            $eobStatus = new EOBStatus( $row['option_id'], $row['title'] );
+            array_push( $eobStatuses, $eobStatus );
+        }
+
+        return $eobStatuses;
     }
 
     /**
@@ -181,6 +208,34 @@ class RepricingAPI {
         return $user;
     }
 
+    public function getPayors($patientID, $dateOfService) {
+        $primary = getInsuranceDataByDate($patientID, $dateOfService, 'primary' );
+        $secondary = getInsuranceDataByDate($patientID, $dateOfService, 'secondary' );
+        $tertiary = getInsuranceDataByDate($patientID, $dateOfService, 'tertiary' );
+
+        $payorOptions = array();
+        if ( $primary['provider'] ) {
+            array_push($payorOptions, array(
+                'payorID' => $primary['provider'],
+                'payorName' => $primary['provider_name']
+            ));
+        }
+        if ( $secondary['provider'] ) {
+            array_push($payorOptions, array(
+                'payorID' => $secondary['provider'],
+                'payorName' => $secondary['provider_name']
+            ));
+        }
+        if ( $tertiary['provider'] ) {
+            array_push($payorOptions, array(
+                'payorID' => $tertiary['provider'],
+                'payorName' => $tertiary['provider_name']
+            ));
+        }
+
+        return $payorOptions;
+    }
+
     public function saveClaim($claimData) {
         $summary = $claimData['summary'];
         $transactions = $claimData['transactions'];
@@ -190,6 +245,8 @@ class RepricingAPI {
         $providerID = $summary['providerID'];
         $dateOfService = $summary['claimDate'];
         $encounterID = $summary['encounterID'];
+        $primaryPayorID = $summary['primaryPayorID'];
+        $eobStatus = $summary['eobStatus'];
         $facilityID = $this->getFacilityIDByName($claimType);
         $userauthorized = empty($_SESSION['userauthorized']) ? 0 : $_SESSION['userauthorized'];
 
@@ -222,13 +279,18 @@ class RepricingAPI {
                 $providerID, $modifier, $units, $fee, $ndc_info, $justify, 0, $notecodes);
         }
 
-        updateClaim(true, $patientID, $encounterID, -1, -1, 2);
+        updateClaim(true, $patientID, $encounterID, $primaryPayorID, 1, 2);
+        $this->applyEOBStatus( $patientID, $encounterID, $eobStatus);
 
         $toReturn = array(
             'encounterID' => $encounterID
         );
 
         return $toReturn;
+    }
+
+    private function applyEOBStatus( $patientID, $encounterID, $eobStatus ) {
+        sqlInsert(self::SQL_APPLY_EOB_STATUS, array ( $eobStatus, $patientID, $encounterID  ) );
     }
 
     private function createEncounter($dos, $patient_pid, $encounter_id, $facilityID, $providerID) {

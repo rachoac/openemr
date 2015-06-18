@@ -53,24 +53,23 @@ require_once("api/RepricingAPI.php");
             <table>
                 <tr>
                     <td class="j-label">Claim type:</td>
-                    <td class="j-field" id="j-claim-type" colspan="2">
+                    <td class="j-field" id="j-claim-type">
                         <select id="j-claim-type-selection">
                         </select>
                     </td>
-                </tr>
-                <tr>
-                    <td class="j-label">Patient:</td>
-                    <td class="j-field" id="j-patient-name">--</td>
 
                     <td class="j-label">Provider:</td>
                     <td class="j-field">
                         <input id="j-provider" type="text" value="">
                         <a href="#modal-add-provider" id="j-btn-add-provider" ><img src="<?php echo $GLOBALS['webroot'] ?>/images/add.png"></a>
                     </td>
+
+                    <td class="j-label">Patient:</td>
+                    <td class="j-field" id="j-patient-name">--</td>
                 </tr>
 
                 <tr>
-                    <td class="j-label">Claim date:</td>
+                    <td class="j-label">Date of service:</td>
                     <td>
                         <input type='text' name='j-claim-date' id='j-claim-date' class="j-date-field"
                                onkeyup='datekeyup(this,mypcc)' onblur='dateblur(this,mypcc)'
@@ -89,6 +88,22 @@ require_once("api/RepricingAPI.php");
                              id='j-received-date-btn' border='0' alt='[?]' style='cursor:pointer'
                              title='Click here to choose a date' >
                     </td>
+
+                    <td class="j-label">Status:</td>
+                    <td class="j-field">
+                        <select id="j-eob-statuses">
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="j-label">Primary Payor:</td>
+                    <td class="j-field" id="j-payor-primary">
+                        <select id="j-payor-primary-selection">
+                        </select>
+                    </td>
+
+                    <td></td>
+                    <td></td>
                 </tr>
 
                 <tr>
@@ -101,6 +116,9 @@ require_once("api/RepricingAPI.php");
                     <td class="j-field">
                         <input id="j-remaining-balance-net-pay" type="text">
                     </td>
+
+                    <td></td>
+                    <td></td>
                 </tr>
 
             </table>

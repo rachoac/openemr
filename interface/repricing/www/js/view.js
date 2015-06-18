@@ -26,6 +26,30 @@ RepricingView.prototype.recalculateBalances = function() {
     $("#j-remaining-balance-net-pay").val(totalBilled + chargeEffect);
 };
 
+
+RepricingView.prototype.populatePayors = function() {
+    var dateOfService = $("#j-claim-date").val();
+    $("#j-payor-primary-selection option").remove();
+    $.get('service/payors.php?patientID=' + this.patientID + '&dateOfService=' + dateOfService + '&ts=' + new Date().getTime(), null, function(data) {
+        $.each( data, function(i, payor) {
+            $("#j-payor-primary-selection").append("<option value='" + payor.payorID + "'>" +payor.payorName + " </option>");
+        } );
+
+    });
+    $("#j-payor-primary-selection").append("<option value='-1'>Unassigned</option>");
+};
+
+RepricingView.prototype.populateEOBStatuses = function() {
+    $.get('service/eob_statuses.php?ts=' + new Date().getTime(), null, function(data) {
+        $.each( data, function(i, eobStatus) {
+            $("#j-eob-statuses").append("<option value='" + eobStatus.id + "'>" +eobStatus.label + " </option>");
+        } );
+
+    });
+    $("#j-payor-primary-selection").append("<option value='-1'>Unassigned</option>");
+};
+
+
 RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntryDescription) {
     var self = this;
     var newRow = $(".j-claim-detail-entry tr").clone();
@@ -177,7 +201,9 @@ RepricingView.prototype.wireEventListeners = function() {
         //
         // setup claim date and service date
         //
-        Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn"});
+        Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn", onUpdate : function() {
+            self.populatePayors();
+        } });
         Calendar.setup({inputField:"j-received-date", ifFormat:"%Y-%m-%d", button:"j-received-date-btn"});
 
         //
@@ -199,6 +225,11 @@ RepricingView.prototype.wireEventListeners = function() {
         $("#j-btn-add-save-claim").click( function() {
            self.saveClaim();
         });
+
+        //
+        // setup eob statuses
+        //
+        self.populateEOBStatuses();
     });
 };
 
@@ -211,7 +242,9 @@ RepricingView.prototype.saveClaim = function() {
         claimDate: $("#j-claim-date").val(),
         receivedDate: $("#j-received-date").val(),
         totalBilled: $("#j-total-billed").val(),
-        claimType: $("#j-claim-type-selection").val()
+        claimType: $("#j-claim-type-selection").val(),
+        primaryPayorID : $("#j-payor-primary-selection").val(),
+        eobStatus : $("#j-eob-statuses").val()
     };
 
     var transactions = [];
