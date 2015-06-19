@@ -32,6 +32,12 @@ function toencounter(rawdata) {
 	 	top.window.parent.left_nav.loadFrame2('nen1','RBot','forms/newpatient/new.php?autoloaded=1&calenc=')
 		return true;
 	 }
+    else if(rawdata=='New EOB')
+	 {
+	 	top.window.parent.left_nav.clearEncounter();
+	 	top.window.parent.left_nav.loadFrame2('nen1','RBot','repricing/repricing.php');
+		return true;
+	 }
 	else if(rawdata=='Past Encounter List')
 	 {
 	 	top.window.parent.left_nav.loadFrame2('pel1','RBot','patient_file/history/encounters.php')

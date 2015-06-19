@@ -1,2 +1,2 @@
 var repricingView = new RepricingView($PID);
-repricingView.setupFormElements();
+repricingView.setupForm();

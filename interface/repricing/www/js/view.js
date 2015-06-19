@@ -2,7 +2,7 @@ function RepricingView(patientID, encounterID, mypcc){
     this.patientID = patientID;
     this.encounterID = encounterID;
     this.populateUser();
-    this.setupFormElements();
+    this.setupForm();
     this.mypcc = mypcc;
 }
 
@@ -44,10 +44,13 @@ RepricingView.prototype.populatePayors = function() {
     return deferred.promise;
 };
 
-RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, serviceDate, serviceCharge, claimEntryDescription) {
+RepricingView.prototype.buildClaimDetailEntry = function(serviceCodeID, serviceCode, serviceDate, serviceCharge, claimEntryDescription) {
     $("#j-claim-detail-list").show();
     var self = this;
     var newRow = $(".j-claim-detail-entry tr").clone();
+    if ( serviceCodeID ) {
+        newRow.find(".j-service-code").attr('data-service-code-ID', serviceCodeID);
+    }
     if ( serviceCode ) {
         newRow.find('.j-service-code').val(serviceCode);
     }
@@ -55,14 +58,10 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, serviceDat
         newRow.find('.j-claim-entry-description').html(claimEntryDescription);
     }
 
-    //
     // attach to DOM
-    //
     $("#j-claim-detail-list table").append(newRow);
 
-    //
     // setup calendar
-    //
     var receivedDate = serviceDate || $('#j-received-date').val();
     var rowID = guid();
     newRow.find('.j-claim-detail-date')
@@ -83,9 +82,7 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, serviceDat
 
     Calendar.setup({inputField:rowID, ifFormat:"%Y-%m-%d", button:rowID + '-btn'});
 
-    //
     // setup service code
-    //
     newRow.find(".j-service-code")
         .autocomplete({
             source: 'service/service_code.php',
@@ -98,11 +95,14 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, serviceDat
                 newRow.find(".j-service-charge").focus();
                 newRow.find('.j-service-allowed').val(ui.item.allowedCharge || 0.00);
             }
+        }).focusout( function() {
+            if (!$(this).attr('data-service-code-ID') && $(this).val().trim() ) {
+                $(this).val("");
+                newRow.find('.j-claim-entry-description').html( '--');
+            }
         });
 
-    //
     // setup delete
-    //
     newRow.find('.j-claim-entry-delete-btn')
         .click( function() {
             newRow.remove();
@@ -112,9 +112,7 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, serviceDat
             self.recalculateBalances();
         });
 
-    //
     // setup service charge
-    //
     newRow.find('.j-service-charge')
         .change( function() {
             self.recalculateBalances();
@@ -134,9 +132,7 @@ RepricingView.prototype.wireEventListeners = function() {
         self.buildClaimDetailEntry();
     });
 
-    //
     // setup provider
-    //
     $("#j-provider")
         .focus()
         .autocomplete({
@@ -158,32 +154,27 @@ RepricingView.prototype.wireEventListeners = function() {
         dlgopen('../usergroup/addrbook_edit.php?isAuthorized=1&type=' + type, '_blank', 700, 550);
     });
 
-    //
     // setup claim date and service date
-    //
     Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn", onUpdate : function() {
         self.populatePayors();
     } });
     Calendar.setup({inputField:"j-received-date", ifFormat:"%Y-%m-%d", button:"j-received-date-btn"});
 
-    //
     // setup total billed
-    //
     $("#j-total-billed").change( function() {
         self.recalculateBalances();
     });
 
-    //
     // setup received date
-    //
     var today = new Date();
     $("#j-received-date").val( today.format("yyyy-mm-dd") );
 
-    //
     // setup save claim
-    //
     $("#j-btn-add-save-claim").click( function() {
-        self.saveClaim();
+        var claimData = self.validateSave();
+        if (claimData ) {
+            self.saveClaim(claimData);
+        }
     });
 
     return Q.resolve();
@@ -241,6 +232,7 @@ RepricingView.prototype.populateClaim = function() {
             var toCall = self.buildClaimDetailEntry;
             $.each( transactions, function( i, transaction ) {
                 toCall.call( self,
+                    transaction['serviceCode'].id,
                     transaction['serviceCode'].code,
                     transaction['serviceDate'],
                     transaction['charge'],
@@ -261,7 +253,7 @@ RepricingView.prototype.populateClaim = function() {
     return deferred.promise;
 };
 
-RepricingView.prototype.setupFormElements = function() {
+RepricingView.prototype.setupForm = function() {
     var self = this;
     $(document).ready( function() {
         self.wireEventListeners()
@@ -274,39 +266,100 @@ RepricingView.prototype.setupFormElements = function() {
     });
 };
 
-RepricingView.prototype.saveClaim = function() {
+RepricingView.prototype.validateSave = function() {
+    var claimData = gatherClaimData();
+    var errors = [];
+
+    // inspect summary for errors
+    if ( !claimData.summary.claimDate ) {
+        errors.push('Date of service is required');
+    }
+    if ( !claimData.summary.receivedDate ) {
+        errors.push('Received date is required');
+    }
+    if ( !claimData.summary.providerID ) {
+        errors.push('Provider is required');
+    }
+    if ( !claimData.summary.totalBilled ) {
+        errors.push('Total billed is required');
+    }
+
+    if ( claimData.transactions.length < 1 ) {
+        errors.push('There must be at least one service.');
+    } else {
+        debugger;
+        // inspect transactions for errors
+        for ( var i = 1; i <= claimData.transactions.length; i++) {
+            var service = claimData.transactions[i-1];
+            if ( !service.serviceCodeID ) {
+                errors.push( 'Service #' + i + ' is missing Service Code.');
+            }
+            if ( !service.transactionDate ) {
+                errors.push( 'Service #' + i + ' is missing Service Date.');
+            }
+            if ( !service.charge ) {
+                errors.push( 'Service #' + i + ' is missing charge amount.');
+            }
+            if ( !service.allowed ) {
+                errors.push( 'Service #' + i + ' is missing allowed amount.');
+            }
+        }
+    }
+
+    if ( errors.length > 0) {
+        var errorMsg = '';
+        errorMsg += 'Please resolve the following errors before saving the EOB.\n';
+        errorMsg += '\n';
+        for (var i = 0; i < errors.length; i++ ) {
+            errorMsg += errors[i] + '\n';
+        }
+
+        alert(errorMsg);
+        return;
+    }
+
+    return claimData;
+};
+
+function gatherClaimData() {
     var self = this;
     // 1. scrape claim metadata from the UI
     var summary = {
-        patientID : self.patientID,
-        providerID : $("#j-provider").attr('data-provider-ID'),
+        patientID: self.patientID,
+        providerID: $("#j-provider").attr('data-provider-ID'),
         claimDate: $("#j-claim-date").val(),
         receivedDate: $("#j-received-date").val(),
         totalBilled: $("#j-total-billed").val(),
         claimType: $("#j-claim-type-selection").val(),
-        primaryPayorID : $("#j-payor-primary-selection").val(),
-        eobStatus : $("#j-eob-statuses").val(),
-        eobNote : $("#j-eob-note").val()
+        primaryPayorID: $("#j-payor-primary-selection").val(),
+        eobStatus: $("#j-eob-statuses").val(),
+        eobNote: $("#j-eob-note").val()
     };
 
     var transactions = [];
-    $.each( $('.j-claim-detail-entry-row:visible'), function(i, transaction) {
+    $.each($('.j-claim-detail-entry-row:visible'), function (i, transaction) {
         var row = $(transaction);
         var thisTransactionDate = row.find('.j-claim-detail-date').val();
-        var thisCharge = parseFloat( row.find('.j-service-charge').val() || "0.0" );
-        var thisAllowedAmount = parseFloat( row.find('.j-service-allowed').val() || "0.0" );
+        var thisCharge = parseFloat(row.find('.j-service-charge').val() || "0.0");
+        var thisAllowedAmount = parseFloat(row.find('.j-service-allowed').val() || "0.0");
         var serviceCodeID = row.attr('data-service-code-ID');
-        transactions.push( {
-            serviceCodeID : serviceCodeID,
-            transactionDate : thisTransactionDate,
-            charge : thisCharge,
-            allowed : thisAllowedAmount
+        transactions.push({
+            serviceCodeID: serviceCodeID,
+            transactionDate: thisTransactionDate,
+            charge: thisCharge,
+            allowed: thisAllowedAmount
         });
     });
+    return {self: self, summary: summary, transactions: transactions};
+}
 
+RepricingView.prototype.saveClaim = function(claimData) {
+    var self = claimData.self;
+    var summary = claimData.summary;
+    var transactions = claimData.transactions;
     var claim = {
-        summary : summary,
-        transactions : transactions
+        summary: summary,
+        transactions: transactions
     };
 
     // 2. call the backend to save it
@@ -315,9 +368,15 @@ RepricingView.prototype.saveClaim = function() {
         type: "POST",
         contentType: "application/json; charset=utf-8",
         url: "service/claims.php",
-        data:  JSON.stringify(claim),
+        data: JSON.stringify(claim),
         success: function (response) {
-            // todo
+            // set active encounter
+            var encounterID = response.summary.encounterID;
+            var encounterDate = new Date(summary.claimDate).format("mm/dd/yyyy");
+            parent.left_nav.setEncounter(encounterDate, encounterID, window.name);
+
+            // update form model
+            self.encounterID = encounterID;
         }
     });
 

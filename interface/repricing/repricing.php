@@ -40,7 +40,7 @@ require_once("api/RepricingAPI.php");
         <script type="text/javascript" src="www/js/view.js?v=<?php echo rand();?>"></script>
         <script>
             var mypcc = '<?php echo $GLOBALS['phone_country_code'] ?>';
-            var encounterID = <?php echo $encounter ? $encounter : -1 ?>;
+            var encounterID = parent.left_nav.active_encounter;
             var repricingView = new RepricingView(<?php echo $_SESSION['pid']?>, encounterID, mypcc);
         </script>
     </head>

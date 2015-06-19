@@ -336,6 +336,7 @@ class RepricingAPI {
                  "1", $dateOfService, $userauthorized );
 
             $summary['encounterID'] = $encounterID;
+            $claimData['summary'] = $summary;
         } else {
             $this->updateEncounter($dateOfService, $patientID, $encounterID, $facilityID, $providerID);
         }

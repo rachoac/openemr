@@ -96,12 +96,12 @@ function addBilling($encounter_id, $code_type, $code, $code_text, $pid,
   $authorized="0", $provider, $modifier="", $units="", $fee="0.00",
   $ndc_info='', $justify='', $billed=0, $notecodes='', $date)
 {
-    $date = !$date ? NOW() : $date;
+    $date = !$date ? 'NOW()' : "'" . $date . "'";
   $sql = "insert into billing (date, encounter, code_type, code, code_text, " .
     "pid, authorized, user, groupname, activity, billed, provider_id, " .
     "modifier, units, fee, ndc_info, justify, notecodes) values (" .
-    "?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)";
-  return sqlInsert($sql, array($date, $encounter_id,$code_type,$code,$code_text,$pid,$authorized,$_SESSION['authId'],$_SESSION['authProvider'],$billed,$provider,$modifier,$units,$fee,$ndc_info,$justify,$notecodes));
+      $date . ", ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)";
+  return sqlInsert($sql, array($encounter_id,$code_type,$code,$code_text,$pid,$authorized,$_SESSION['authId'],$_SESSION['authProvider'],$billed,$provider,$modifier,$units,$fee,$ndc_info,$justify,$notecodes));
 }
 
 function authorizeBilling($id, $authorized = "1")
