@@ -102,8 +102,10 @@ require_once("api/RepricingAPI.php");
                         </select>
                     </td>
 
-                    <td></td>
-                    <td></td>
+                    <td class="j-label">Note:</td>
+                    <td colspan="2">
+                        <input type="text" id="j-eob-note">
+                    </td>
                 </tr>
 
                 <tr>

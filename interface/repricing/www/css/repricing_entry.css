@@ -93,3 +93,7 @@ thead.j-claim-detail-entry-header th {
 .j-charge-field {
     width: 80px;
 }
+
+#j-eob-note {
+    width:170%;
+}

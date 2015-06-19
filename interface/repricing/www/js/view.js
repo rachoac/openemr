@@ -6,7 +6,7 @@ function RepricingView(patientID, mypcc){
 }
 
 RepricingView.prototype.populateUser = function() {
-    $.get('service/patients.php?patientID=' + this.patientID + '&ts=' + new Date().getTime(), null, function(data) {
+    $.  get('service/patients.php?patientID=' + this.patientID + '&ts=' + new Date().getTime(), null, function(data) {
         $("#j-patient-name")
             .html(data.name)
             .attr('data-patient-ID', data.id);
@@ -244,7 +244,8 @@ RepricingView.prototype.saveClaim = function() {
         totalBilled: $("#j-total-billed").val(),
         claimType: $("#j-claim-type-selection").val(),
         primaryPayorID : $("#j-payor-primary-selection").val(),
-        eobStatus : $("#j-eob-statuses").val()
+        eobStatus : $("#j-eob-statuses").val(),
+        eobNote : $("#j-eob-note").val()
     };
 
     var transactions = [];

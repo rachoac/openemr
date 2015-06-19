@@ -85,7 +85,8 @@ class RepricingAPI {
 
     const SQL_APPLY_EOB_STATUS =
         "UPDATE claims
-            SET eob_status = ?
+            SET eob_status = ?,
+                eob_note = ?
           WHERE patient_id = ?
             AND encounter_id = ?
             AND version = 1";
@@ -247,6 +248,7 @@ class RepricingAPI {
         $encounterID = $summary['encounterID'];
         $primaryPayorID = $summary['primaryPayorID'];
         $eobStatus = $summary['eobStatus'];
+        $eobNote = $summary['eobNote'];
         $facilityID = $this->getFacilityIDByName($claimType);
         $userauthorized = empty($_SESSION['userauthorized']) ? 0 : $_SESSION['userauthorized'];
 
@@ -280,7 +282,7 @@ class RepricingAPI {
         }
 
         updateClaim(true, $patientID, $encounterID, $primaryPayorID, 1, 2);
-        $this->applyEOBStatus( $patientID, $encounterID, $eobStatus);
+        $this->applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote);
 
         $toReturn = array(
             'encounterID' => $encounterID
@@ -289,8 +291,8 @@ class RepricingAPI {
         return $toReturn;
     }
 
-    private function applyEOBStatus( $patientID, $encounterID, $eobStatus ) {
-        sqlInsert(self::SQL_APPLY_EOB_STATUS, array ( $eobStatus, $patientID, $encounterID  ) );
+    private function applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote ) {
+        sqlInsert(self::SQL_APPLY_EOB_STATUS, array ( $eobStatus, $eobNote, $patientID, $encounterID ) );
     }
 
     private function createEncounter($dos, $patient_pid, $encounter_id, $facilityID, $providerID) {
