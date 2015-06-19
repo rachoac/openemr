@@ -1,12 +1,13 @@
-function RepricingView(patientID, mypcc){
+function RepricingView(patientID, encounterID, mypcc){
     this.patientID = patientID;
+    this.encounterID = encounterID;
     this.populateUser();
-    this.wireEventListeners();
+    this.setupFormElements();
     this.mypcc = mypcc;
 }
 
 RepricingView.prototype.populateUser = function() {
-    $.  get('service/patients.php?patientID=' + this.patientID + '&ts=' + new Date().getTime(), null, function(data) {
+    $.get('service/patients.php?patientID=' + this.patientID + '&ts=' + new Date().getTime(), null, function(data) {
         $("#j-patient-name")
             .html(data.name)
             .attr('data-patient-ID', data.id);
@@ -38,17 +39,6 @@ RepricingView.prototype.populatePayors = function() {
     });
     $("#j-payor-primary-selection").append("<option value='-1'>Unassigned</option>");
 };
-
-RepricingView.prototype.populateEOBStatuses = function() {
-    $.get('service/eob_statuses.php?ts=' + new Date().getTime(), null, function(data) {
-        $.each( data, function(i, eobStatus) {
-            $("#j-eob-statuses").append("<option value='" + eobStatus.id + "'>" +eobStatus.label + " </option>");
-        } );
-
-    });
-    $("#j-payor-primary-selection").append("<option value='-1'>Unassigned</option>");
-};
-
 
 RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntryDescription) {
     var self = this;
@@ -156,29 +146,18 @@ RepricingView.prototype.saveProvider = function( firstName, middleName, lastName
 RepricingView.prototype.wireEventListeners = function() {
     var self = this;
 
-    $(document).ready( function() {
-        $("#j-btn-add-service").click( function() {
-            $("#j-claim-detail-list").show();
+    $("#j-btn-add-service").click( function() {
+        $("#j-claim-detail-list").show();
 
-            self.buildClaimDetailEntry();
-        });
+        self.buildClaimDetailEntry();
+    });
 
-
-        //
-        // setup claim type
-        //
-        $.get('service/claim_types.php', null, function(data) {
-            $.each( data, function(i, claimType) {
-                $("#j-claim-type-selection").append("<option value='" + claimType.label + "'>" +claimType.label + " </option>");
-            });
-        });
-
-        //
-        // setup provider
-        //
-        $("#j-provider")
-            .focus()
-            .autocomplete({
+    //
+    // setup provider
+    //
+    $("#j-provider")
+        .focus()
+        .autocomplete({
             source: 'service/providers.php',
             minLength: 2,
             select: function( event, ui ) {
@@ -192,44 +171,99 @@ RepricingView.prototype.wireEventListeners = function() {
             }
         });
 
-        $("#j-btn-add-provider").click( function() {
-            var type = "";
-            dlgopen('../usergroup/addrbook_edit.php?isAuthorized=1&type=' + type, '_blank', 700, 550);
+    $("#j-btn-add-provider").click( function() {
+        var type = "";
+        dlgopen('../usergroup/addrbook_edit.php?isAuthorized=1&type=' + type, '_blank', 700, 550);
+    });
+
+    //
+    // setup claim date and service date
+    //
+    Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn", onUpdate : function() {
+        self.populatePayors();
+    } });
+    Calendar.setup({inputField:"j-received-date", ifFormat:"%Y-%m-%d", button:"j-received-date-btn"});
+
+    //
+    // setup total billed
+    //
+    $("#j-total-billed").change( function() {
+        self.recalculateBalances();
+    });
+
+    //
+    // setup received date
+    //
+    var today = new Date();
+    $("#j-received-date").val( today.format("yyyy-mm-dd") );
+
+    //
+    // setup save claim
+    //
+    $("#j-btn-add-save-claim").click( function() {
+        self.saveClaim();
+    });
+
+    return Q.resolve();
+};
+
+RepricingView.prototype.setupDynamicOptions = function() {
+    function populateEOBStatuses() {
+        var deferred = Q.defer();
+
+        $("#j-payor-primary-selection").append("<option value='-1'>Unassigned</option>");
+        $.get('service/eob_statuses.php?ts=' + new Date().getTime(), null, function(data) {
+            $.each( data, function(i, eobStatus) {
+                $("#j-eob-statuses").append("<option value='" + eobStatus.id + "'>" +eobStatus.label + " </option>");
+            } );
+            deferred.resolve();
         });
-        //});
 
-        //
-        // setup claim date and service date
-        //
-        Calendar.setup({inputField:"j-claim-date", ifFormat:"%Y-%m-%d", button:"j-claim-date-btn", onUpdate : function() {
-            self.populatePayors();
-        } });
-        Calendar.setup({inputField:"j-received-date", ifFormat:"%Y-%m-%d", button:"j-received-date-btn"});
+        return deferred.promise;
+    }
 
-        //
-        // setup total billed
-        //
-        $("#j-total-billed").change( function() {
-            self.recalculateBalances();
+    function setupClaimType() {
+        var deferred = Q.defer();
+        $.get('service/claim_types.php', null, function (data) {
+            $.each(data, function (i, claimType) {
+                $("#j-claim-type-selection").append("<option value='" + claimType.label + "'>" + claimType.label + " </option>");
+            });
+            deferred.resolve();
         });
+        return deferred.promise;
+    }
 
-        //
-        // setup received date
-        //
-        var today = new Date();
-        $("#j-received-date").val( today.format("yyyy-mm-dd") );
+    return populateEOBStatuses().then( function() {
+        return setupClaimType();
+    });
+};
 
-        //
-        // setup save claim
-        //
-        $("#j-btn-add-save-claim").click( function() {
-           self.saveClaim();
+RepricingView.prototype.populateClaim = function() {
+    var deferred = Q.defer();
+
+    var encounterID = self.encounterID;
+    if ( encounterID ) {
+        $.get('service/claims.php?encounterID=' + encounterID + '&ts=' + new Date().getTime(), null, function(data) {
+            console.log(data);
         });
+    } else {
+        // its a new claim (eg. no encounter is specified)
+        deferred.resolve();
+    }
 
-        //
-        // setup eob statuses
-        //
-        self.populateEOBStatuses();
+    return deferred.promise;
+};
+
+RepricingView.prototype.setupFormElements = function() {
+    var self = this;
+    $(document).ready( function() {
+        self.wireEventListeners()
+            .then( function () {
+                return self.setupDynamicOptions();
+            })
+            .then( function() {
+                return self.populateClaim();
+            });
     });
 };
 
@@ -282,7 +316,6 @@ RepricingView.prototype.saveClaim = function() {
 
 };
 
-// private
 function guid() {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
@@ -292,3 +325,4 @@ function guid() {
     return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
         s4() + '-' + s4() + s4() + s4();
 }
+

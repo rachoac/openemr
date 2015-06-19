@@ -305,7 +305,6 @@ class RepricingAPI {
 
     public function saveClaim($claimData) {
         $summary = $claimData['summary'];
-        $transactions = $claimData['transactions'];
 
         $claimType = $summary['claimType'];
         $patientID = $summary['patientID'];
@@ -325,13 +324,16 @@ class RepricingAPI {
 
             addForm($encounterID, "New Patient Encounter", $formID, "newpatient", $patientID,
                  "1", $dateOfService, $userauthorized );
+
+            $summary['encounterID'] = $encounterID;
         } else {
             $this->updateEncounter($dateOfService, $patientID, $encounterID, $facilityID, $providerID);
         }
 
-        foreach( $transactions as $transaction ) {
+        foreach( $claimData['transactions'] as &$transaction ) {
             $serviceCodeID = $transaction['serviceCodeID'];
             $charge = $transaction['charge'];
+            $billingRowID = $transaction['id'];
 
             $serviceCode = $this->getServiceCodeByID($serviceCodeID);
             $code_type = $serviceCode->codeType;
@@ -345,18 +347,20 @@ class RepricingAPI {
             $justify = "";
             $notecodes = "";
 
-            addBilling($encounterID, $code_type, $code, $code_text, $patientID, $auth,
-                $providerID, $modifier, $units, $fee, $ndc_info, $justify, 0, $notecodes);
+            if ( !$billingRowID ) {
+                $billingRowID = addBilling($encounterID, $code_type, $code, $code_text, $patientID, $auth,
+                    $providerID, $modifier, $units, $fee, $ndc_info, $justify, 0, $notecodes);
+
+                $transaction['id'] = $billingRowID;
+            } else {
+                // todo -- *update* billing instead of always adding one, if transaction row has an id present!
+            }
         }
 
         updateClaim(true, $patientID, $encounterID, $primaryPayorID, 1, 2);
         $this->applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote);
 
-        $toReturn = array(
-            'encounterID' => $encounterID
-        );
-
-        return $toReturn;
+        return $claimData;
     }
 
     private function applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote ) {
