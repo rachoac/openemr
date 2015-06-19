@@ -273,7 +273,7 @@ class RepricingAPI {
         $patientID = $encounter['pid'];
         $providerID = $encounter['provider_id'];
         $providerName = $this->getProvider($providerID)->name;
-        $dateOfService = date_format(new DateTime($encounter['onset_date']), 'Y-m-d');
+        $dateOfService = date_format(new DateTime($encounter['date']), 'Y-m-d');
         $claim = sqlQuery( self::SQL_SELECT_CLAIM_BY_PATIENT_ID_ENCOUNTER_ID, array($patientID, $encounterID) );
         $primaryPayorID = $claim['payer_id'];
         $eobStatus = $claim['eob_status'];

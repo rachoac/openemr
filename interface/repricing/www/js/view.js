@@ -229,6 +229,8 @@ RepricingView.prototype.populateClaim = function() {
                 .val( summary['providerName'] )
                 .attr('data-provider-ID', summary['providerID'] );
             $("#j-claim-type-selection").val(summary['claimType']);
+            $("#j-eob-statuses").val(summary['eobStatus']);
+            $("#j-eob-note").val(summary['eobNote']);
 
             self.populatePayors()
                 .then( function() {
