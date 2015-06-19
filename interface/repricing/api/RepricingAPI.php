@@ -34,6 +34,9 @@ class RepricingAPI {
     const SQL_SERVICE_CODE_BY_ID =
         "WHERE id = ?";
 
+    const SQL_SERVICE_CODE_BY_CODE =
+        "WHERE code = ?";
+
     const SQL_USERS_SELECT =
         "SELECT id,
                 fname,
@@ -83,6 +86,11 @@ class RepricingAPI {
            FROM facility
           WHERE name = ?";
 
+    const SQL_FACILITY_NAME_GET_BY_ID =
+        "SELECT name
+           FROM facility
+          WHERE id = ?";
+
     const SQL_APPLY_EOB_STATUS =
         "UPDATE claims
             SET eob_status = ?,
@@ -90,6 +98,22 @@ class RepricingAPI {
           WHERE patient_id = ?
             AND encounter_id = ?
             AND version = 1";
+
+    const SQL_ENCOUNTER_SELECT =
+        "SELECT date,
+                pc_catid,
+                onset_date,
+                provider_id,
+                facility_id,
+                pid,
+                encounter
+           FROM form_encounter";
+
+    const SQL_ENCOUNTER_GET_BY_ENCOUNTER_ID =
+        "WHERE encounter = ?";
+
+    const SQL_SELECT_CLAIM_BY_PATIENT_ID_ENCOUNTER_ID =
+        "SELECT * FROM claims WHERE patient_ID = ? AND encounter_id = ?";
 
     function __construct() {
     }
@@ -122,17 +146,15 @@ class RepricingAPI {
      * Returns ServiceCode by ID
      * @param string service code ID
      */
-    function getServiceCode( $id ) {
+    function getServiceCodeByID( $id ) {
         $row = sqlQuery( self::SQL_SERVICE_CODES_SELECT . " " . self::SQL_SERVICE_CODE_BY_ID, array($id) );
+        $code = $this->createServiceCodeFromResult($row);
+        return $code;
+    }
 
-        $code = new ServiceCode(
-            $row['id'],
-            $row['code'],
-            $row['code_text'],
-            $row['code_type'],
-            $row['allowedCharge'] ? $row['allowedCharge'] : 0.00
-        );
-
+    function getServiceCodeByCode( $code ) {
+        $row = sqlQuery( self::SQL_SERVICE_CODES_SELECT . " " . self::SQL_SERVICE_CODE_BY_CODE, array($code) );
+        $code = $this->createServiceCodeFromResult($row);
         return $code;
     }
 
@@ -237,6 +259,50 @@ class RepricingAPI {
         return $payorOptions;
     }
 
+    public function loadClaim($encounterID) {
+        $claimData = array();
+
+        $encounter = sqlQuery(self::SQL_ENCOUNTER_SELECT . " " . self::SQL_ENCOUNTER_GET_BY_ENCOUNTER_ID, array ( $encounterID ) );
+        $facilityID = $encounter['facility_id'];
+        $claimType = $this->getFacilityNameByID($facilityID);
+        $patientID = $encounter['pid'];
+        $providerID = $encounter['provider_id'];
+        $dateOfService = $encounter['onset_date'];
+        $claim = sqlQuery( self::SQL_SELECT_CLAIM_BY_PATIENT_ID_ENCOUNTER_ID, array($patientID, $encounterID) );
+        $primaryPayorID = $claim['payer_id'];
+        $eobStatus = $claim['eob_status'];
+        $eobNote = $claim['eob_note'];
+
+        $claimData['summary'] = array(
+            'claimType' => $claimType,
+            'patientID' => $patientID,
+            'providerID' => $providerID,
+            'claimDate' => $dateOfService,
+            'encounterID' => $encounterID,
+            'primaryPayorID' => $primaryPayorID,
+            'eobStatus' => $eobStatus,
+            'eobNote' => $eobNote,
+        );
+
+        $claimData['transactions'] = array();
+
+        $billingRows = getBillingByEncounter($patientID, $encounterID);
+        foreach( $billingRows as $billingRow ) {
+            $serviceCode = $this->getServiceCodeByCode($billingRow['code']);
+            $serviceCodeID = $serviceCode->id;
+            $charge = $billingRow['fee'];
+
+            $transaction = array(
+                'serviceCodeID' => $serviceCodeID,
+                'charge' => $charge
+            );
+
+            array_push($claimData['transactions'], $transaction);
+        }
+
+        return $claimData;
+    }
+
     public function saveClaim($claimData) {
         $summary = $claimData['summary'];
         $transactions = $claimData['transactions'];
@@ -264,15 +330,17 @@ class RepricingAPI {
         }
 
         foreach( $transactions as $transaction ) {
-            $serviceCode = $this->getServiceCode($transaction['serviceCodeID']);
+            $serviceCodeID = $transaction['serviceCodeID'];
+            $charge = $transaction['charge'];
 
+            $serviceCode = $this->getServiceCodeByID($serviceCodeID);
             $code_type = $serviceCode->codeType;
             $code = $serviceCode->code;
             $code_text = $serviceCode->text;
             $auth = 1;
             $modifier = "";
             $units = 1;
-            $fee = $transaction['charge'];
+            $fee = $charge;
             $ndc_info = "";
             $justify = "";
             $notecodes = "";
@@ -324,6 +392,27 @@ class RepricingAPI {
     private function getFacilityIDByName($name) {
         $row = sqlQuery(self::SQL_FACILITYID_GET_BY_NAME, array ($name) );
         return $row['id'];
+    }
+
+    private function getFacilityNameByID($id) {
+        $row = sqlQuery(self::SQL_FACILITY_NAME_GET_BY_ID, array ($id) );
+        return $row['name'];
+    }
+
+    /**
+     * @param $row
+     * @return ServiceCode
+     */
+    public function createServiceCodeFromResult($row)
+    {
+        $code = new ServiceCode(
+            $row['id'],
+            $row['code'],
+            $row['code_text'],
+            $row['code_type'],
+            $row['allowedCharge'] ? $row['allowedCharge'] : 0.00
+        );
+        return $code;
     }
 }
 ?>

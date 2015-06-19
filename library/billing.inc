@@ -13,7 +13,7 @@ function getBillingByPid ($pid, $cols = "*")
     return sortBilling(sqlQuery("select $cols from billing where pid ='$pid' and activity=1 order by date DESC limit 0,1"));
 }
 
-function getBillingByEncounter ($pid,$encounter, $cols = "code_type, code, code_text")
+function getBillingByEncounter ($pid,$encounter, $cols = "code_type, code, code_text, id, fee")
 {
     $res = sqlStatement(
             "select $cols from billing "
