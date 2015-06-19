@@ -44,7 +44,8 @@ RepricingView.prototype.populatePayors = function() {
     return deferred.promise;
 };
 
-RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntryDescription) {
+RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, serviceDate, serviceCharge, claimEntryDescription) {
+    $("#j-claim-detail-list").show();
     var self = this;
     var newRow = $(".j-claim-detail-entry tr").clone();
     if ( serviceCode ) {
@@ -62,7 +63,7 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
     //
     // setup calendar
     //
-    var receivedDate = $('#j-received-date').val();
+    var receivedDate = serviceDate || $('#j-received-date').val();
     var rowID = guid();
     newRow.find('.j-claim-detail-date')
         .val( receivedDate )
@@ -118,13 +119,17 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
         .change( function() {
             self.recalculateBalances();
         });
+
+    if ( serviceCharge ) {
+        newRow.find('.j-service-charge').val( serviceCharge );
+        self.recalculateBalances();
+    }
 };
 
 RepricingView.prototype.wireEventListeners = function() {
     var self = this;
 
     $("#j-btn-add-service").click( function() {
-        $("#j-claim-detail-list").show();
 
         self.buildClaimDetailEntry();
     });
@@ -231,6 +236,17 @@ RepricingView.prototype.populateClaim = function() {
             $("#j-claim-type-selection").val(summary['claimType']);
             $("#j-eob-statuses").val(summary['eobStatus']);
             $("#j-eob-note").val(summary['eobNote']);
+
+            var transactions = data['transactions'];
+            var toCall = self.buildClaimDetailEntry;
+            $.each( transactions, function( i, transaction ) {
+                toCall.call( self,
+                    transaction['serviceCode'].code,
+                    transaction['serviceDate'],
+                    transaction['charge'],
+                    transaction['serviceCode'].text
+                );
+            });
 
             self.populatePayors()
                 .then( function() {

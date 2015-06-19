@@ -298,9 +298,12 @@ class RepricingAPI {
             $serviceCode = $this->getServiceCodeByCode($billingRow['code']);
             $serviceCodeID = $serviceCode->id;
             $charge = $billingRow['fee'];
+            $serviceDate = date_format(new DateTime($billingRow['date']), 'Y-m-d');
 
             $transaction = array(
+                'serviceDate' => $serviceDate,
                 'serviceCodeID' => $serviceCodeID,
+                'serviceCode' => $serviceCode,
                 'charge' => $charge
             );
 
@@ -339,6 +342,7 @@ class RepricingAPI {
 
         foreach( $claimData['transactions'] as &$transaction ) {
             $serviceCodeID = $transaction['serviceCodeID'];
+            $serviceDate = $transaction['serviceDate'];
             $charge = $transaction['charge'];
             $billingRowID = $transaction['id'];
 
@@ -356,7 +360,7 @@ class RepricingAPI {
 
             if ( !$billingRowID ) {
                 $billingRowID = addBilling($encounterID, $code_type, $code, $code_text, $patientID, $auth,
-                    $providerID, $modifier, $units, $fee, $ndc_info, $justify, 0, $notecodes);
+                    $providerID, $modifier, $units, $fee, $ndc_info, $justify, 0, $notecodes, $serviceDate);
 
                 $transaction['id'] = $billingRowID;
             } else {
