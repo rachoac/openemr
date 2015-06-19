@@ -188,6 +188,11 @@ class RepricingAPI {
         return $this->userFromRow($user);
     }
 
+    private function getProvider($providerID) {
+        $user = sqlQuery(self::SQL_USERS_SELECT . " " . self::SQL_USERS_WHERE_GET_BY_ID, array ( $providerID ) );
+        return $this->userFromRow($user);
+    }
+
     public function getClaimTypes() {
         $stmt = sqlStatement(self::SQL_CLAIM_TYPES_SELECT );
 
@@ -267,7 +272,8 @@ class RepricingAPI {
         $claimType = $this->getFacilityNameByID($facilityID);
         $patientID = $encounter['pid'];
         $providerID = $encounter['provider_id'];
-        $dateOfService = $encounter['onset_date'];
+        $providerName = $this->getProvider($providerID)->name;
+        $dateOfService = date_format(new DateTime($encounter['onset_date']), 'Y-m-d');
         $claim = sqlQuery( self::SQL_SELECT_CLAIM_BY_PATIENT_ID_ENCOUNTER_ID, array($patientID, $encounterID) );
         $primaryPayorID = $claim['payer_id'];
         $eobStatus = $claim['eob_status'];
@@ -277,6 +283,7 @@ class RepricingAPI {
             'claimType' => $claimType,
             'patientID' => $patientID,
             'providerID' => $providerID,
+            'providerName' => $providerName,
             'claimDate' => $dateOfService,
             'encounterID' => $encounterID,
             'primaryPayorID' => $primaryPayorID,

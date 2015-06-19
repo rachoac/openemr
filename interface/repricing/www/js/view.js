@@ -29,6 +29,7 @@ RepricingView.prototype.recalculateBalances = function() {
 
 
 RepricingView.prototype.populatePayors = function() {
+    var deferred = Q.defer();
     var dateOfService = $("#j-claim-date").val();
     $("#j-payor-primary-selection option").remove();
     $.get('service/payors.php?patientID=' + this.patientID + '&dateOfService=' + dateOfService + '&ts=' + new Date().getTime(), null, function(data) {
@@ -36,8 +37,11 @@ RepricingView.prototype.populatePayors = function() {
             $("#j-payor-primary-selection").append("<option value='" + payor.payorID + "'>" +payor.payorName + " </option>");
         } );
 
+        deferred.resolve();
     });
     $("#j-payor-primary-selection").append("<option value='-1'>Unassigned</option>");
+
+    return deferred.promise;
 };
 
 RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntryDescription) {
@@ -114,33 +118,6 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCode, claimEntry
         .change( function() {
             self.recalculateBalances();
         });
-};
-
-RepricingView.prototype.saveProvider = function( firstName, middleName, lastName, npi ) {
-    var deferred = Q.defer();
-
-    $.ajax({
-        type: "POST",
-        url: 'service/providers_create.php',
-        data: {
-            fname: firstName,
-            mname: middleName,
-            lname: lastName,
-            npi: npi
-        },
-        success: function(data, textStatus, jqXHR) {
-            $("#j-provider").val(data.value);
-            $("#j-provider").attr('data-provider-ID', data.id);
-        },
-        error: function(jqXHR, textStatus, errorThrown) {
-            alert(errorThrown);
-        },
-        dataType: 'json'
-    });
-
-    deferred.resolve();
-
-    return deferred.promise;
 };
 
 RepricingView.prototype.wireEventListeners = function() {
@@ -240,11 +217,23 @@ RepricingView.prototype.setupDynamicOptions = function() {
 
 RepricingView.prototype.populateClaim = function() {
     var deferred = Q.defer();
+    var self = this;
 
     var encounterID = self.encounterID;
     if ( encounterID ) {
         $.get('service/claims.php?encounterID=' + encounterID + '&ts=' + new Date().getTime(), null, function(data) {
             console.log(data);
+            var summary = data['summary'];
+            $('#j-claim-date').val( summary['claimDate']);
+            $('#j-provider')
+                .val( summary['providerName'] )
+                .attr('data-provider-ID', summary['providerID'] );
+            $("#j-claim-type-selection").val(summary['claimType']);
+
+            self.populatePayors()
+                .then( function() {
+                    $("#j-payor-primary-selection").val( summary['primaryPayorID']);
+                });
         });
     } else {
         // its a new claim (eg. no encounter is specified)
