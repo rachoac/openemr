@@ -24,7 +24,7 @@ RepricingView.prototype.recalculateBalances = function() {
         chargeEffect -= (thisCharge - thisAllowedAmount);
     });
 
-    $("#j-remaining-balance-net-pay").val(totalBilled + chargeEffect);
+    $("#j-remaining-balance-net-pay").text( (totalBilled + chargeEffect) * 1.00);
 };
 
 
@@ -44,7 +44,8 @@ RepricingView.prototype.populatePayors = function() {
     return deferred.promise;
 };
 
-RepricingView.prototype.buildClaimDetailEntry = function(serviceCodeID, serviceCode, serviceDate, serviceCharge, claimEntryDescription) {
+RepricingView.prototype.buildClaimDetailEntry = function(billingRowID, serviceCodeID, serviceCode,
+                                                         serviceDate, serviceCharge, serviceAllowed, claimEntryDescription) {
     $("#j-claim-detail-list").show();
     var self = this;
     var newRow = $(".j-claim-detail-entry tr").clone();
@@ -56,6 +57,9 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCodeID, serviceC
     }
     if ( claimEntryDescription ) {
         newRow.find('.j-claim-entry-description').html(claimEntryDescription);
+    }
+    if ( billingRowID ) {
+        newRow.attr('billingRowID', billingRowID);
     }
 
     // attach to DOM
@@ -91,7 +95,7 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCodeID, serviceC
                 $(this).parent().parent().find('td.j-claim-entry-description').html( ui.item.label );
 
                 // focus on the charge column once selected
-                newRow.attr('data-service-code-ID', ui.item.id);
+                newRow.find(".j-service-code").attr('data-service-code-ID', ui.item.id);
                 newRow.find(".j-service-charge").focus();
                 newRow.find('.j-service-allowed').val(ui.item.allowedCharge || 0.00);
             }
@@ -99,6 +103,11 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCodeID, serviceC
             if (!$(this).attr('data-service-code-ID') && $(this).val().trim() ) {
                 $(this).val("");
                 newRow.find('.j-claim-entry-description').html( '--');
+            }
+        }).change( function() {
+            if (! $(this).val().trim() ) {
+                newRow.find('.j-claim-entry-description').html( '--');
+                $(this).attr('data-service-code-ID', '');
             }
         });
 
@@ -120,6 +129,11 @@ RepricingView.prototype.buildClaimDetailEntry = function(serviceCodeID, serviceC
 
     if ( serviceCharge ) {
         newRow.find('.j-service-charge').val( serviceCharge );
+        self.recalculateBalances();
+    }
+
+    if ( serviceAllowed  ) {
+        newRow.find('.j-service-allowed').val( serviceAllowed );
         self.recalculateBalances();
     }
 };
@@ -227,15 +241,18 @@ RepricingView.prototype.populateClaim = function() {
             $("#j-claim-type-selection").val(summary['claimType']);
             $("#j-eob-statuses").val(summary['eobStatus']);
             $("#j-eob-note").val(summary['eobNote']);
+            $("#j-total-billed").val(summary['totalBilled']);
 
             var transactions = data['transactions'];
             var toCall = self.buildClaimDetailEntry;
             $.each( transactions, function( i, transaction ) {
                 toCall.call( self,
+                    transaction['billingRowID'],
                     transaction['serviceCode'].id,
                     transaction['serviceCode'].code,
                     transaction['serviceDate'],
                     transaction['charge'],
+                    transaction['allowed'],
                     transaction['serviceCode'].text
                 );
             });
@@ -267,7 +284,7 @@ RepricingView.prototype.setupForm = function() {
 };
 
 RepricingView.prototype.validateSave = function() {
-    var claimData = gatherClaimData();
+    var claimData = gatherClaimData.call(this);
     var errors = [];
 
     // inspect summary for errors
@@ -287,7 +304,6 @@ RepricingView.prototype.validateSave = function() {
     if ( claimData.transactions.length < 1 ) {
         errors.push('There must be at least one service.');
     } else {
-        debugger;
         // inspect transactions for errors
         for ( var i = 1; i <= claimData.transactions.length; i++) {
             var service = claimData.transactions[i-1];
@@ -326,6 +342,7 @@ function gatherClaimData() {
     // 1. scrape claim metadata from the UI
     var summary = {
         patientID: self.patientID,
+        encounterID: self.encounterID,
         providerID: $("#j-provider").attr('data-provider-ID'),
         claimDate: $("#j-claim-date").val(),
         receivedDate: $("#j-received-date").val(),
@@ -339,11 +356,13 @@ function gatherClaimData() {
     var transactions = [];
     $.each($('.j-claim-detail-entry-row:visible'), function (i, transaction) {
         var row = $(transaction);
+        var billingRowID = row.attr('billingRowID');
         var thisTransactionDate = row.find('.j-claim-detail-date').val();
         var thisCharge = parseFloat(row.find('.j-service-charge').val() || "0.0");
         var thisAllowedAmount = parseFloat(row.find('.j-service-allowed').val() || "0.0");
-        var serviceCodeID = row.attr('data-service-code-ID');
+        var serviceCodeID = row.find('.j-service-code').attr('data-service-code-ID');
         transactions.push({
+            billingRowID : billingRowID,
             serviceCodeID: serviceCodeID,
             transactionDate: thisTransactionDate,
             charge: thisCharge,
@@ -377,6 +396,14 @@ RepricingView.prototype.saveClaim = function(claimData) {
 
             // update form model
             self.encounterID = encounterID;
+
+            var domRows = $('.j-claim-detail-entry-row:visible');
+            for ( var i = 0; i < response.transactions.length; i++ ) {
+                var savedTransaction = response.transactions[i];
+                $(domRows[i]).attr('billingRowID', savedTransaction['billingRowID']);
+            }
+
+            alert('Claim saved.');
         }
     });
 

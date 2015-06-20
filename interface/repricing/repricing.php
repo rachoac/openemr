@@ -117,7 +117,7 @@ require_once("api/RepricingAPI.php");
 
                     <td class="j-label">Balance/<br>Net pay:</td>
                     <td class="j-field">
-                        <input id="j-remaining-balance-net-pay" type="text">
+                        <span id="j-remaining-balance-net-pay">
                     </td>
 
                     <td></td>

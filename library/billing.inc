@@ -13,7 +13,7 @@ function getBillingByPid ($pid, $cols = "*")
     return sortBilling(sqlQuery("select $cols from billing where pid ='$pid' and activity=1 order by date DESC limit 0,1"));
 }
 
-function getBillingByEncounter ($pid,$encounter, $cols = "code_type, code, code_text, id, fee, date")
+function getBillingByEncounter ($pid,$encounter, $cols = "code_type, code, code_text, id, fee, charge, date")
 {
     $res = sqlStatement(
             "select $cols from billing "
@@ -94,14 +94,25 @@ function sortBilling ($res)
 
 function addBilling($encounter_id, $code_type, $code, $code_text, $pid,
   $authorized="0", $provider, $modifier="", $units="", $fee="0.00",
-  $ndc_info='', $justify='', $billed=0, $notecodes='', $date)
+  $ndc_info='', $justify='', $billed=0, $notecodes='', $date, $charge="0.00")
 {
     $date = !$date ? 'NOW()' : "'" . $date . "'";
   $sql = "insert into billing (date, encounter, code_type, code, code_text, " .
     "pid, authorized, user, groupname, activity, billed, provider_id, " .
-    "modifier, units, fee, ndc_info, justify, notecodes) values (" .
-      $date . ", ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)";
-  return sqlInsert($sql, array($encounter_id,$code_type,$code,$code_text,$pid,$authorized,$_SESSION['authId'],$_SESSION['authProvider'],$billed,$provider,$modifier,$units,$fee,$ndc_info,$justify,$notecodes));
+    "modifier, units, fee, ndc_info, justify, notecodes, charge) values (" .
+      $date . ", ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  return sqlInsert($sql, array($encounter_id,$code_type,$code,$code_text,$pid,$authorized,$_SESSION['authId'],$_SESSION['authProvider'],$billed,$provider,$modifier,$units,$fee,$ndc_info,$justify,$notecodes,$charge));
+}
+
+function updateBilling($billingID, $encounter_id, $code_type, $code, $code_text, $pid,
+  $authorized="0", $provider, $modifier="", $units="", $fee="0.00",
+  $ndc_info='', $justify='', $billed=0, $notecodes='', $date, $charge="0.00")
+{
+    $date = !$date ? 'NOW()' : "'" . $date . "'";
+  $sql = "update billing set date = " . $date . ", encounter = ?, code_type = ?, code = ?, code_text = ?, " .
+    "pid = ?, authorized = ?, user = ?, groupname = ?, activity = 1, billed = ?, provider_id = ?, " .
+    "modifier = ?, units = ?, fee = ?, ndc_info = ?, justify = ?, notecodes = ?, charge = ? WHERE id = ?";
+  return sqlInsert($sql, array($encounter_id,$code_type,$code,$code_text,$pid,$authorized,$_SESSION['authId'],$_SESSION['authProvider'],$billed,$provider,$modifier,$units,$fee,$ndc_info,$justify,$notecodes, $charge, $billingID));
 }
 
 function authorizeBilling($id, $authorized = "1")

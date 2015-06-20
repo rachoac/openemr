@@ -10,6 +10,7 @@ require_once("ListOption.php");
 require_once("Provider.php");
 require_once("ClaimType.php");
 require_once("EOBStatus.php");
+require_once("Claim.php");
 
 class RepricingAPI {
 
@@ -94,7 +95,8 @@ class RepricingAPI {
     const SQL_APPLY_EOB_STATUS =
         "UPDATE claims
             SET eob_status = ?,
-                eob_note = ?
+                eob_note = ?,
+                eob_total_billed = ?
           WHERE patient_id = ?
             AND encounter_id = ?
             AND version = 1";
@@ -278,6 +280,7 @@ class RepricingAPI {
         $primaryPayorID = $claim['payer_id'];
         $eobStatus = $claim['eob_status'];
         $eobNote = $claim['eob_note'];
+        $totalBilled = $claim['eob_total_billed'];
 
         $claimData['summary'] = array(
             'claimType' => $claimType,
@@ -285,6 +288,7 @@ class RepricingAPI {
             'providerID' => $providerID,
             'providerName' => $providerName,
             'claimDate' => $dateOfService,
+            'totalBilled' => $totalBilled,
             'encounterID' => $encounterID,
             'primaryPayorID' => $primaryPayorID,
             'eobStatus' => $eobStatus,
@@ -295,22 +299,26 @@ class RepricingAPI {
 
         $billingRows = getBillingByEncounter($patientID, $encounterID);
         foreach( $billingRows as $billingRow ) {
+            $billingRowID = $billingRow['id'];
             $serviceCode = $this->getServiceCodeByCode($billingRow['code']);
             $serviceCodeID = $serviceCode->id;
-            $charge = $billingRow['fee'];
+            $charge = $billingRow['charge'] ? $billingRow['charge'] : "0.00";
+            $allowed = $billingRow['fee'] ? $billingRow['fee']  :  "0.00";
             $serviceDate = date_format(new DateTime($billingRow['date']), 'Y-m-d');
 
             $transaction = array(
+                'billingRowID' => $billingRowID,
                 'serviceDate' => $serviceDate,
                 'serviceCodeID' => $serviceCodeID,
                 'serviceCode' => $serviceCode,
-                'charge' => $charge
+                'charge' => $charge,
+                'allowed' => $allowed
             );
 
             array_push($claimData['transactions'], $transaction);
         }
 
-        return $claimData;
+        return new Claim($claimData['summary'], $claimData['transactions']);
     }
 
     public function saveClaim($claimData) {
@@ -320,12 +328,15 @@ class RepricingAPI {
         $patientID = $summary['patientID'];
         $providerID = $summary['providerID'];
         $dateOfService = $summary['claimDate'];
+        $totalBilled = $summary['totalBilled'];
         $encounterID = $summary['encounterID'];
         $primaryPayorID = $summary['primaryPayorID'];
         $eobStatus = $summary['eobStatus'];
         $eobNote = $summary['eobNote'];
         $facilityID = $this->getFacilityIDByName($claimType);
         $userauthorized = empty($_SESSION['userauthorized']) ? 0 : $_SESSION['userauthorized'];
+
+        $isClaimUpdate = false;
 
         if (!$encounterID) {
             // create an encounter
@@ -338,6 +349,7 @@ class RepricingAPI {
             $summary['encounterID'] = $encounterID;
             $claimData['summary'] = $summary;
         } else {
+            $isClaimUpdate = true;
             $this->updateEncounter($dateOfService, $patientID, $encounterID, $facilityID, $providerID);
         }
 
@@ -345,7 +357,8 @@ class RepricingAPI {
             $serviceCodeID = $transaction['serviceCodeID'];
             $serviceDate = $transaction['serviceDate'];
             $charge = $transaction['charge'];
-            $billingRowID = $transaction['id'];
+            $allowed = $transaction['allowed'];
+            $billingRowID = $transaction['billingRowID'];
 
             $serviceCode = $this->getServiceCodeByID($serviceCodeID);
             $code_type = $serviceCode->codeType;
@@ -354,29 +367,41 @@ class RepricingAPI {
             $auth = 1;
             $modifier = "";
             $units = 1;
-            $fee = $charge;
             $ndc_info = "";
             $justify = "";
             $notecodes = "";
 
             if ( !$billingRowID ) {
                 $billingRowID = addBilling($encounterID, $code_type, $code, $code_text, $patientID, $auth,
-                    $providerID, $modifier, $units, $fee, $ndc_info, $justify, 0, $notecodes, $serviceDate);
+                    $providerID, $modifier, $units, $allowed, $ndc_info, $justify, 0, $notecodes, $serviceDate, $charge);
 
-                $transaction['id'] = $billingRowID;
+                $transaction['billingRowID'] = $billingRowID;
             } else {
-                // todo -- *update* billing instead of always adding one, if transaction row has an id present!
+                updateBilling($billingRowID, $encounterID, $code_type, $code, $code_text, $patientID, $auth,
+                    $providerID, $modifier, $units, $allowed, $ndc_info, $justify, 0, $notecodes, $serviceDate, $charge);
             }
         }
 
         updateClaim(true, $patientID, $encounterID, $primaryPayorID, 1, 2);
-        $this->applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote);
+        $this->applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote, $totalBilled);
 
-        return $claimData;
+        $updatedClaim = new Claim($claimData['summary'], $claimData['transactions']);
+        if ( $isClaimUpdate ) {
+            $previousClaim = $this->loadClaim($encounterID);
+            // destroy any billing rows in previous claim that are not present in updated claim
+            foreach ($previousClaim->transactions as $previousClaimTransaction ) {
+                $oldBillingRowID = $previousClaimTransaction['billingRowID'];
+                if ( !$updatedClaim->getTransaction($oldBillingRowID)) {
+                    deleteBilling($oldBillingRowID);
+                }
+            }
+        }
+
+        return $updatedClaim;
     }
 
-    private function applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote ) {
-        sqlInsert(self::SQL_APPLY_EOB_STATUS, array ( $eobStatus, $eobNote, $patientID, $encounterID ) );
+    private function applyEOBStatus( $patientID, $encounterID, $eobStatus, $eobNote, $totalBilled ) {
+        sqlInsert(self::SQL_APPLY_EOB_STATUS, array ( $eobStatus, $eobNote, $totalBilled, $patientID, $encounterID ) );
     }
 
     private function createEncounter($dos, $patient_pid, $encounter_id, $facilityID, $providerID) {
@@ -401,7 +426,7 @@ class RepricingAPI {
             "provider_id = $providerID, " .
             "facility_id = $facilityID, " .
             "billing_facility = $facilityID, " .
-            "pid = '$patient_pid', WHERE " .
+            "pid = '$patient_pid' WHERE " .
             "encounter = '$encounter_id'");
     }
 
